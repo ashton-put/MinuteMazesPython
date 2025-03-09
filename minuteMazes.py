@@ -171,6 +171,66 @@ def astar(maze, start, goal):
 #**********************************************************************************************************************
 # CLASSES
 
+class MainMenuView(arcade.View):
+    """ Main Menu View """
+
+    def on_show(self):
+        """ This is run once when we switch to this view """
+        arcade.set_background_color(arcade.color.AMAZON)
+
+    def on_draw(self):
+        """ Render the screen. """
+        self.clear()
+        arcade.draw_text("Minute Mazes", self.window.width / 2, self.window.height / 2 + 50,
+                         arcade.color.WHITE, font_size=50, anchor_x="center")
+        arcade.draw_text("Press S to Start", self.window.width / 2, self.window.height / 2,
+                         arcade.color.WHITE, font_size=20, anchor_x="center")
+        arcade.draw_text("Press Q to Quit", self.window.width / 2, self.window.height / 2 - 30,
+                         arcade.color.WHITE, font_size=20, anchor_x="center")
+
+    def on_key_press(self, key, modifiers):
+        """ Handle key presses. """
+        if key == arcade.key.S:
+            game_view = GameView()
+            game_view.setup()
+            self.window.show_view(game_view)
+        elif key == arcade.key.Q:
+            arcade.close_window()
+
+
+class InGameMenuView(arcade.View):
+    """ In-Game Menu View """
+
+    def __init__(self, game_view):
+        super().__init__()
+        self.game_view = game_view
+
+    def on_show(self):
+        """ This is run once when we switch to this view """
+        arcade.set_background_color(arcade.color.GRAY)
+
+    def on_draw(self):
+        """ Render the screen. """
+        self.clear()
+        arcade.draw_text("In-Game Menu", self.window.width / 2, self.window.height / 2 + 50,
+                         arcade.color.WHITE, font_size=50, anchor_x="center")
+        arcade.draw_text("Press M to Resume", self.window.width / 2, self.window.height / 2,
+                         arcade.color.WHITE, font_size=20, anchor_x="center")
+        arcade.draw_text("Press R for Main Menu", self.window.width / 2, self.window.height / 2 - 30,
+                         arcade.color.WHITE, font_size=20, anchor_x="center")
+        arcade.draw_text("Press Q to Quit", self.window.width / 2, self.window.height / 2 - 60,
+                         arcade.color.WHITE, font_size=20, anchor_x="center")
+
+    def on_key_press(self, key, modifiers):
+        """ Handle key presses. """
+        if key == arcade.key.M:
+            self.window.show_view(self.game_view)
+        elif key == arcade.key.R:
+            main_menu_view = MainMenuView()
+            self.window.show_view(main_menu_view)
+        elif key == arcade.key.Q:
+            arcade.close_window()
+
 # Main application class
 class GameView(arcade.View):
     """ Main application class. """
@@ -348,15 +408,19 @@ class GameView(arcade.View):
     # Called whenever a key is pressed
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed. """
+        if key == arcade.key.M:
+            in_game_menu_view = InGameMenuView(self)
+            self.window.show_view(in_game_menu_view)
+        else:
+            if key == arcade.key.UP:
+                self.player_sprite.change_y = MOVEMENT_SPEED
+            elif key == arcade.key.DOWN:
+                self.player_sprite.change_y = -MOVEMENT_SPEED
+            elif key == arcade.key.LEFT:
+                self.player_sprite.change_x = -MOVEMENT_SPEED
+            elif key == arcade.key.RIGHT:
+                self.player_sprite.change_x = MOVEMENT_SPEED
 
-        if key == arcade.key.UP:
-            self.player_sprite.change_y = MOVEMENT_SPEED
-        elif key == arcade.key.DOWN:
-            self.player_sprite.change_y = -MOVEMENT_SPEED
-        elif key == arcade.key.LEFT:
-            self.player_sprite.change_x = -MOVEMENT_SPEED
-        elif key == arcade.key.RIGHT:
-            self.player_sprite.change_x = MOVEMENT_SPEED
 
     # Called when the user releases a key
     def on_key_release(self, key, modifiers):
@@ -401,17 +465,9 @@ class GameView(arcade.View):
 
 def main():
     """ Main function """
-    # Create a window class. This is what actually shows up on screen
     window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
-
-    # Create and setup the GameView
-    game = GameView()
-    game.setup()
-
-    # Show GameView on screen
-    window.show_view(game)
-
-    # Start the arcade game loop
+    main_menu_view = MainMenuView()
+    window.show_view(main_menu_view)
     arcade.run()
 
 # Run the main function
