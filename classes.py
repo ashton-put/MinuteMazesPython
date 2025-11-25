@@ -1,18 +1,9 @@
-""" 
-Description: 
-    Minute mazes is a basic game where the player has to navigate through a maze to reach the exit. 
-    The maze is generated with a depth-first search algorithm. 
-    The player can move up, down, left, and right. Constrained by the walls of the maze and window boundaries.
-    The player can collect coins in the maze and the score is displayed on the screen. 
-    The player's elapsed time in the maze is also displayed on the screen. 
-"""
+# CLASSES
 
 from imports import *
 from constants import *
 from functions import *
 
-#**********************************************************************************************************************
-# CLASSES
 
 class MainMenuView(arcade.View):
     """ Main Menu View """
@@ -301,20 +292,3 @@ class GameView(arcade.View):
 
         # Save the time it took to do this
         self.processing_time = timeit.default_timer() - start_time
-
-
-#**********************************************************************************************************************
-# MAIN FUNCTION
-
-def main():
-    """ Main function """
-    window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
-    main_menu_view = MainMenuView()
-    window.show_view(main_menu_view)
-    arcade.run()
-
-# Run the main function
-if __name__ == "__main__":
-    main()
-
-#**********************************************************************************************************************
