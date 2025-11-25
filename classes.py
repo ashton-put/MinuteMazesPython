@@ -100,7 +100,6 @@ class CongratulationsView(arcade.View):
             # Return to game view
             self.window.show_view(self.game_view)
 
-
 # Main application class
 class GameView(arcade.View):
     """ Main application class. """
