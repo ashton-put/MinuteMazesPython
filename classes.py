@@ -8,6 +8,10 @@ from functions import *
 class MainMenuView(arcade.View):
     """ Main Menu View """
 
+    def __init__(self):
+        super().__init__()
+        self.camera_gui = arcade.Camera2D()
+
     def on_show(self):
         """ This is run once when we switch to this view """
         arcade.set_background_color(arcade.color.AMAZON)
@@ -15,6 +19,8 @@ class MainMenuView(arcade.View):
     def on_draw(self):
         """ Render the screen. """
         self.clear()
+        # Use GUI camera for menu
+        self.camera_gui.use()
         arcade.draw_text("Minute Mazes", self.window.width / 2, self.window.height / 2 + 50,
                          arcade.color.WHITE, font_size=50, anchor_x="center")
         arcade.draw_text("Press S to Start", self.window.width / 2, self.window.height / 2,
@@ -37,6 +43,7 @@ class InGameMenuView(arcade.View):
     def __init__(self, game_view):
         super().__init__()
         self.game_view = game_view
+        self.camera_gui = arcade.Camera2D()
 
     def on_show(self):
         """ This is run once when we switch to this view """
@@ -45,6 +52,8 @@ class InGameMenuView(arcade.View):
     def on_draw(self):
         """ Render the screen. """
         self.clear()
+        # Use GUI camera for pause menu
+        self.camera_gui.use()
         arcade.draw_text("In-Game Menu", self.window.width / 2, self.window.height / 2 + 50,
                          arcade.color.WHITE, font_size=50, anchor_x="center")
         arcade.draw_text("Press M to Resume", self.window.width / 2, self.window.height / 2,
@@ -71,6 +80,7 @@ class CongratulationsView(arcade.View):
         super().__init__()
         self.game_view = game_view
         self.display_timer = 0
+        self.camera_gui = arcade.Camera2D()
 
     def on_show(self):
         """ This is run once when we switch to this view """
@@ -80,6 +90,8 @@ class CongratulationsView(arcade.View):
     def on_draw(self):
         """ Render the screen. """
         self.clear()
+        # Use GUI camera for congratulations screen
+        self.camera_gui.use()
         arcade.draw_text("Congratulations!", self.window.width / 2, self.window.height / 2 + 50,
                          arcade.color.WHITE, font_size=50, anchor_x="center", bold=True)
         arcade.draw_text("Maze Completed!", self.window.width / 2, self.window.height / 2,
@@ -113,29 +125,34 @@ class GameView(arcade.View):
         # Sprite lists
         self.player_list = None
         self.wall_list = None
-        self.path_list = None  # Add a separate list for path sprites
-        self.coin_list = None  # Add a separate list for coin sprites
-        self.exit_list = None  # Add a separate list for exit sprite
+        self.path_list = None  
+        self.coin_list = None  
+        self.exit_list = None 
 
         # Player info
-        self.score = 0
         self.player_sprite = None
+        self.score = 0
 
         # Physics engine
         self.physics_engine = None
 
-        # Camera for scrolling
-        self.camera = None
+        # Track the current state of what key is pressed
+        self.left_pressed = False
+        self.right_pressed = False
+        self.up_pressed = False
+        self.down_pressed = False
 
-        # Time to process
-        self.processing_time = 0
-        self.draw_time = 0
+        # Create the cameras. One for the GUI, one for the sprites.
+        # We scroll the 'sprite world' but not the GUI.
+        self.camera_sprites = arcade.Camera2D()
+        self.camera_gui = arcade.Camera2D()
 
         # Elapsed time
-        self.elapsed_time = 0  # Add an attribute to keep track of elapsed time
+        self.elapsed_time = 0
 
         # Completed mazes counter
         self.completed_mazes = 0
+
 
     # Set up the game and initialize the variables
     def setup(self):
@@ -144,9 +161,9 @@ class GameView(arcade.View):
         # Sprite lists
         self.player_list = arcade.SpriteList()
         self.wall_list = arcade.SpriteList()
-        self.path_list = arcade.SpriteList()  # Initialize the path list
-        self.coin_list = arcade.SpriteList()  # Initialize the coin list
-        self.exit_list = arcade.SpriteList()  # Initialize the exit list
+        self.path_list = arcade.SpriteList()  
+        self.coin_list = arcade.SpriteList()  
+        self.exit_list = arcade.SpriteList() 
 
         self.score = 0
         # Don't reset elapsed_time here - it's reset in CongratulationsView
@@ -199,7 +216,7 @@ class GameView(arcade.View):
 
         # Set up the player
         self.player_sprite = arcade.Sprite(
-            ":resources:images/animated_characters/female_person/femalePerson_idle.png",
+            ":resources:images/animated_characters/male_person/malePerson_idle.png",
             scale=SPRITE_SCALING)
         self.player_list.append(self.player_sprite)
 
@@ -221,9 +238,6 @@ class GameView(arcade.View):
         # Set the background color
         self.background_color = arcade.color.AMAZON
 
-        # Setup Camera
-        self.camera = arcade.camera.Camera2D()
-
         # Find path from entrance to exit
         start = (1, 0)
         goal = (MAZE_HEIGHT - 2, MAZE_WIDTH - 1)
@@ -243,7 +257,7 @@ class GameView(arcade.View):
         # Randomly place coins in the maze
         for row in range(1, MAZE_HEIGHT, 2):
             for column in range(1, MAZE_WIDTH, 2):
-                if maze[row][column] == TILE_EMPTY and random.random() < 0.1:  # 10% chance to place a coin
+                if maze[row][column] == TILE_EMPTY and random.random() < 0.15:  # 15% chance to place a coin
                     coin = arcade.Sprite(
                         ":resources:images/items/coinGold.png",
                         scale=SPRITE_SCALING,
@@ -251,6 +265,7 @@ class GameView(arcade.View):
                     coin.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
                     coin.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
                     self.coin_list.append(coin)
+
 
     # Render the screen
     def on_draw(self):
@@ -261,40 +276,49 @@ class GameView(arcade.View):
         # This command has to happen before we start drawing
         self.clear()
 
-        # Start timing how long this takes
-        draw_start_time = timeit.default_timer()
+        # Select the sprite camera for the game world
+        self.camera_sprites.use()
 
         # Draw all the sprites
         self.wall_list.draw()
-        self.path_list.draw()  # Draw the path sprites
-        self.coin_list.draw()  # Draw the coin sprites
-        self.exit_list.draw()  # Draw the exit sprite
+        self.path_list.draw()
+        self.coin_list.draw()
+        self.exit_list.draw()
         self.player_list.draw()
 
-        # Draw info on the screen
-        sprite_count = len(self.wall_list)
+        # Select the GUI camera for the HUD
+        self.camera_gui.use()
 
-        # Display score and time
-        left, bottom = self.camera.bottom_left
+        # Draw the HUD (score, time, completed mazes)
         output = f"Coins: {self.score}"
-        arcade.draw_text(output,
-                         left + 20,
-                         WINDOW_HEIGHT - 20 + bottom,
-                         arcade.color.WHITE, 16)
+        arcade.draw_text(output, 20, WINDOW_HEIGHT - 20, arcade.color.WHITE, 16)
 
         output = f"Time: {self.elapsed_time:.1f}"
-        arcade.draw_text(output,
-                         left + 20,
-                         WINDOW_HEIGHT - 40 + bottom,
-                         arcade.color.WHITE, 16)
+        arcade.draw_text(output, 20, WINDOW_HEIGHT - 40, arcade.color.WHITE, 16)
 
         output = f"Completed: {self.completed_mazes}"
-        arcade.draw_text(output,
-                         left + 20,
-                         WINDOW_HEIGHT - 60 + bottom,
-                         arcade.color.WHITE, 16)
+        arcade.draw_text(output, 20, WINDOW_HEIGHT - 60, arcade.color.WHITE, 16)
 
-        self.draw_time = timeit.default_timer() - draw_start_time
+
+    def update_player_speed(self):
+        """ Calculate speed based on the keys pressed """
+        self.player_sprite.change_x = 0
+        self.player_sprite.change_y = 0
+
+        if self.up_pressed and not self.down_pressed:
+            self.player_sprite.change_y = MOVEMENT_SPEED
+        elif self.down_pressed and not self.up_pressed:
+            self.player_sprite.change_y = -MOVEMENT_SPEED
+        if self.left_pressed and not self.right_pressed:
+            self.player_sprite.change_x = -MOVEMENT_SPEED
+        elif self.right_pressed and not self.left_pressed:
+            self.player_sprite.change_x = MOVEMENT_SPEED
+
+        # Normalize diagonal movement so speed is consistent in all directions
+        if self.player_sprite.change_x != 0 and self.player_sprite.change_y != 0:
+            # Moving diagonally, so normalize to maintain constant speed
+            self.player_sprite.change_x *= 0.7071  # 1/sqrt(2)
+            self.player_sprite.change_y *= 0.7071
 
     # Called whenever a key is pressed
     def on_key_press(self, key, modifiers):
@@ -302,25 +326,36 @@ class GameView(arcade.View):
         if key == arcade.key.M:
             in_game_menu_view = InGameMenuView(self)
             self.window.show_view(in_game_menu_view)
-        else:
-            if key == arcade.key.UP:
-                self.player_sprite.change_y = MOVEMENT_SPEED
-            elif key == arcade.key.DOWN:
-                self.player_sprite.change_y = -MOVEMENT_SPEED
-            elif key == arcade.key.LEFT:
-                self.player_sprite.change_x = -MOVEMENT_SPEED
-            elif key == arcade.key.RIGHT:
-                self.player_sprite.change_x = MOVEMENT_SPEED
+        elif key == arcade.key.UP:
+            self.up_pressed = True
+            self.update_player_speed()
+        elif key == arcade.key.DOWN:
+            self.down_pressed = True
+            self.update_player_speed()
+        elif key == arcade.key.LEFT:
+            self.left_pressed = True
+            self.update_player_speed()
+        elif key == arcade.key.RIGHT:
+            self.right_pressed = True
+            self.update_player_speed()
 
 
     # Called when the user releases a key
     def on_key_release(self, key, modifiers):
         """Called when the user releases a key. """
+        if key == arcade.key.UP:
+            self.up_pressed = False
+            self.update_player_speed()
+        elif key == arcade.key.DOWN:
+            self.down_pressed = False
+            self.update_player_speed()
+        elif key == arcade.key.LEFT:
+            self.left_pressed = False
+            self.update_player_speed()
+        elif key == arcade.key.RIGHT:
+            self.right_pressed = False
+            self.update_player_speed()
 
-        if key == arcade.key.UP or key == arcade.key.DOWN:
-            self.player_sprite.change_y = 0
-        elif key == arcade.key.LEFT or key == arcade.key.RIGHT:
-            self.player_sprite.change_x = 0
 
     # Movement and game logic
     def on_update(self, delta_time):
@@ -348,11 +383,19 @@ class GameView(arcade.View):
         # Update the elapsed time
         self.elapsed_time += delta_time
 
-        # --- Manage Scrolling ---
-        self.camera.position = arcade.camera.grips.constrain_boundary_xy(
-            self.camera.view_data, CAMERA_BOUNDARY, self.player_sprite.position
-        )
-        self.camera.use()
+        # Scroll the screen to the player
+        self.scroll_to_player()
 
-        # Save the time it took to do this
-        self.processing_time = timeit.default_timer() - start_time
+
+    def scroll_to_player(self):
+        """
+        Scroll the window to the player.
+
+        if CAMERA_SPEED is 1, the camera will immediately move to the desired
+        position. Anything between 0 and 1 will have the camera move to the
+        location with a smoother pan.
+        """
+        position = (self.player_sprite.center_x, self.player_sprite.center_y)
+        self.camera_sprites.position = arcade.math.lerp_2d(
+            self.camera_sprites.position, position, CAMERA_SPEED
+        )

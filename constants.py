@@ -10,10 +10,13 @@ SPRITE_SIZE = int(NATIVE_SPRITE_SIZE * SPRITE_SCALING)
 # Set window size
 WINDOW_WIDTH = 1000
 WINDOW_HEIGHT = 700
-WINDOW_TITLE = "MINUTE MAZES GAME"
+WINDOW_TITLE = "MINUTE MAZES"
 
 # Set movement speed
-MOVEMENT_SPEED = 8
+MOVEMENT_SPEED = 6
+
+# Set camera speed
+CAMERA_SPEED = 1
 
 # Set tile types
     # Epmty tile = walkable
