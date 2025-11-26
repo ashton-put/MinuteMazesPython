@@ -17,7 +17,7 @@ MOVEMENT_SPEED = 6
 CAMERA_SPEED = 0.2
 
 # Congratulations screen display time (seconds)
-CONGRATULATIONS_DELAY = 3.0
+CONGRATULATIONS_DELAY = 10.0
 
 # Set tile types
     # Empty tile = walkable
