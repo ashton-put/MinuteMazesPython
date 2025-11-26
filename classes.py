@@ -252,7 +252,17 @@ class GameView(arcade.View):
         self.player_sprite.center_x = SPRITE_SIZE + SPRITE_SIZE / 2
         self.player_sprite.center_y = SPRITE_SIZE + SPRITE_SIZE / 2
 
-        # Create exit sprite
+        # Create black tile at exit position (will be drawn under the exit sign)
+        black_tile = arcade.Sprite(
+            ":resources:images/tiles/boxCrate_double.png",
+            scale=SPRITE_SCALING,
+        )
+        black_tile.center_x = (MAZE_WIDTH - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
+        black_tile.center_y = (MAZE_HEIGHT - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
+        black_tile.color = arcade.color.BLACK
+        self.path_list.append(black_tile)
+
+        # Create exit sprite (will be drawn on top of black tile)
         exit_sprite = arcade.Sprite(
             ":resources:images/tiles/signExit.png",
             scale=SPRITE_SCALING,
@@ -266,26 +276,18 @@ class GameView(arcade.View):
         # Set the background color
         self.background_color = arcade.color.AMAZON
 
-        # Find path from entrance to exit
-        start = (1, 1)
-        goal = (MAZE_HEIGHT - 2, MAZE_WIDTH - 2)
-        path = astar(maze, start, goal)
-
-        # Draw the path
-        if path:
-            for (row, column) in path:
-                path_sprite = arcade.Sprite(
-                    ":resources:images/tiles/grassCenter.png",
-                    scale=SPRITE_SCALING,
-                )
-                path_sprite.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
-                path_sprite.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
-                self.path_list.append(path_sprite)  # Add path sprites to path_list
-
         # Randomly place coins in the maze
-        for row in range(1, MAZE_HEIGHT, 2):
-            for column in range(1, MAZE_WIDTH, 2):
-                if maze[row][column] == TILE_EMPTY and random.random() < 0.15:  # 15% chance to place a coin
+        # Only place on verified empty tiles, and avoid player/exit positions
+        player_pos = (1, 1)
+        exit_pos = (MAZE_HEIGHT - 2, MAZE_WIDTH - 2)
+        
+        for row in range(1, MAZE_HEIGHT - 1):
+            for column in range(1, MAZE_WIDTH - 1):
+                # Check if tile is empty, not player/exit position, and random chance
+                if (maze[row][column] == TILE_EMPTY and 
+                    (row, column) != player_pos and 
+                    (row, column) != exit_pos and 
+                    random.random() < 0.08):  # 8% chance to place a coin
                     coin = arcade.Sprite(
                         ":resources:images/items/coinGold.png",
                         scale=SPRITE_SCALING,
@@ -400,9 +402,19 @@ class GameView(arcade.View):
             coin.remove_from_sprite_lists()
             self.score += 1
 
-        # Check if player reached the exit
-        exit_hit_list = arcade.check_for_collision_with_list(self.player_sprite, self.exit_list)
-        if len(exit_hit_list) > 0:
+        # Check if player reached the exit (player must be fully on the exit tile)
+        exit_sprite = self.exit_list[0]
+        # Check if player center is within the exit tile boundaries
+        exit_tile_left = exit_sprite.center_x - SPRITE_SIZE / 2
+        exit_tile_right = exit_sprite.center_x + SPRITE_SIZE / 2
+        exit_tile_bottom = exit_sprite.center_y - SPRITE_SIZE / 2
+        exit_tile_top = exit_sprite.center_y + SPRITE_SIZE / 2
+        
+        # Player must be fully contained within the exit tile
+        if (self.player_sprite.center_x > exit_tile_left and 
+            self.player_sprite.center_x < exit_tile_right and
+            self.player_sprite.center_y > exit_tile_bottom and 
+            self.player_sprite.center_y < exit_tile_top):
             # Show congratulations view
             congratulations_view = CongratulationsView(self)
             self.window.show_view(congratulations_view)
