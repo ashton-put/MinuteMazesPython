@@ -12,7 +12,8 @@ from constants import (
     TILE_CRATE,
     MERGE_SPRITES,
     MOVEMENT_SPEED,
-    CAMERA_SPEED
+    CAMERA_SPEED,
+    CONGRATULATIONS_DELAY
 )
 from functions import make_maze, astar
 
@@ -66,18 +67,23 @@ class InGameMenuView(arcade.View):
         self.clear()
         # Use GUI camera for pause menu
         self.camera_gui.use()
-        arcade.draw_text("In-Game Menu", self.window.width / 2, self.window.height / 2 + 50,
-                         arcade.color.WHITE, font_size=50, anchor_x="center")
+        arcade.draw_text("PAUSED", self.window.width / 2, self.window.height / 2 + 50,
+                         arcade.color.WHITE, font_size=50, anchor_x="center", bold=True)
         arcade.draw_text("Press ENTER to Resume", self.window.width / 2, self.window.height / 2,
                          arcade.color.WHITE, font_size=20, anchor_x="center")
-        arcade.draw_text("Press SPACE for Main Menu", self.window.width / 2, self.window.height / 2 - 30,
+        arcade.draw_text("Press R to Restart", self.window.width / 2, self.window.height / 2 - 30,
                          arcade.color.WHITE, font_size=20, anchor_x="center")
-        arcade.draw_text("Press ESC to Quit", self.window.width / 2, self.window.height / 2 - 60,
+        arcade.draw_text("Press SPACE for Main Menu", self.window.width / 2, self.window.height / 2 - 60,
+                         arcade.color.WHITE, font_size=20, anchor_x="center")
+        arcade.draw_text("Press ESC to Quit", self.window.width / 2, self.window.height / 2 - 90,
                          arcade.color.WHITE, font_size=20, anchor_x="center")
 
     def on_key_press(self, key, modifiers):
         """ Handle key presses. """
         if key == arcade.key.ENTER:
+            self.window.show_view(self.game_view)
+        elif key == arcade.key.R:
+            self.game_view.setup()
             self.window.show_view(self.game_view)
         elif key == arcade.key.SPACE:
             main_menu_view = MainMenuView()
@@ -111,10 +117,20 @@ class CongratulationsView(arcade.View):
         arcade.draw_text(f"Time: {self.game_view.elapsed_time:.1f} seconds", self.window.width / 2, self.window.height / 2 - 40,
                          arcade.color.WHITE, font_size=20, anchor_x="center")
 
+        # Display best time if it exists
+        if self.game_view.best_time is not None:
+            arcade.draw_text(f"Best Time: {self.game_view.best_time:.1f} seconds", 
+                           self.window.width / 2, self.window.height / 2 - 70,
+                           arcade.color.YELLOW, font_size=18, anchor_x="center")
+        
     def on_update(self, delta_time):
         """ Update the view """
         self.display_timer += delta_time
-        if self.display_timer >= 3.0:  # After 3 seconds
+        if self.display_timer >= CONGRATULATIONS_DELAY:  # After 3 seconds
+            # Update best time
+            if self.game_view.best_time is None or self.game_view.elapsed_time < self.game_view.best_time:
+                self.game_view.best_time = self.game_view.elapsed_time
+
             # Increment completed mazes counter
             self.game_view.completed_mazes += 1
             # Reset elapsed time
@@ -166,6 +182,8 @@ class GameView(arcade.View):
         # Completed mazes counter
         self.completed_mazes = 0
 
+        # Best time tracking
+        self.best_time = None
 
     # Set up the game and initialize the variables
     def setup(self):
@@ -369,16 +387,19 @@ class GameView(arcade.View):
         if key == arcade.key.ENTER:
             in_game_menu_view = InGameMenuView(self)
             self.window.show_view(in_game_menu_view)
-        elif key == arcade.key.UP:
+        elif key == arcade.key.R:
+            # Restart current maze
+            self.setup()
+        elif key in (arcade.key.UP, arcade.key.W):
             self.up_pressed = True
             self.update_player_speed()
-        elif key == arcade.key.DOWN:
+        elif key in (arcade.key.DOWN, arcade.key.S):
             self.down_pressed = True
             self.update_player_speed()
-        elif key == arcade.key.LEFT:
+        elif key in (arcade.key.LEFT, arcade.key.A):
             self.left_pressed = True
             self.update_player_speed()
-        elif key == arcade.key.RIGHT:
+        elif key in (arcade.key.RIGHT, arcade.key.D):
             self.right_pressed = True
             self.update_player_speed()
 
@@ -386,16 +407,16 @@ class GameView(arcade.View):
     # Called when the user releases a key
     def on_key_release(self, key, modifiers):
         """Called when the user releases a key. """
-        if key == arcade.key.UP:
+        if key in (arcade.key.UP, arcade.key.W):
             self.up_pressed = False
             self.update_player_speed()
-        elif key == arcade.key.DOWN:
+        elif key in (arcade.key.DOWN, arcade.key.S):
             self.down_pressed = False
             self.update_player_speed()
-        elif key == arcade.key.LEFT:
+        elif key in (arcade.key.LEFT, arcade.key.A):
             self.left_pressed = False
             self.update_player_speed()
-        elif key == arcade.key.RIGHT:
+        elif key in (arcade.key.RIGHT, arcade.key.D):
             self.right_pressed = False
             self.update_player_speed()
 

@@ -14,7 +14,10 @@ WINDOW_TITLE = "MINUTE MAZES"
 MOVEMENT_SPEED = 6
 
 # Set camera speed
-CAMERA_SPEED = 1
+CAMERA_SPEED = 0.2
+
+# Congratulations screen display time (seconds)
+CONGRATULATIONS_DELAY = 3.0
 
 # Set tile types
     # Empty tile = walkable
