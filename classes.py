@@ -1,8 +1,20 @@
 # CLASSES
 
-from imports import *
-from constants import *
-from functions import *
+import random
+import arcade
+from constants import (
+    SPRITE_SCALING,
+    SPRITE_SIZE,
+    WINDOW_HEIGHT,
+    MAZE_WIDTH,
+    MAZE_HEIGHT,
+    TILE_EMPTY,
+    TILE_CRATE,
+    MERGE_SPRITES,
+    MOVEMENT_SPEED,
+    CAMERA_SPEED
+)
+from functions import make_maze, astar
 
 
 class MainMenuView(arcade.View):
@@ -377,8 +389,6 @@ class GameView(arcade.View):
     # Movement and game logic
     def on_update(self, delta_time):
         """ Movement and game logic """
-
-        start_time = timeit.default_timer()
 
         # Call update on all sprites (The sprites don't do much in this
         # example though)

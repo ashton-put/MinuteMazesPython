@@ -1,7 +1,8 @@
 # FUNCTIONS
 
-from imports import *
-from constants import *
+import random
+import heapq
+from constants import TILE_EMPTY, TILE_CRATE
 
 # Create a grid with empty cells on odd row/column combinations
 def _create_grid_with_cells(width, height):

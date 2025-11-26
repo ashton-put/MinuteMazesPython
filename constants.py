@@ -1,7 +1,5 @@
 # CONSTANTS
 
-from imports import *
-
 # Set sprite size
 NATIVE_SPRITE_SIZE = 128
 SPRITE_SCALING = 0.25
@@ -19,7 +17,7 @@ MOVEMENT_SPEED = 6
 CAMERA_SPEED = 1
 
 # Set tile types
-    # Epmty tile = walkable
+    # Empty tile = walkable
     # Crate tile = wall
 TILE_EMPTY = 0
 TILE_CRATE = 1

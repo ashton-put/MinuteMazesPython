@@ -1,9 +1,8 @@
 # MAIN FUNCTION
 
-from imports import *
-from constants import *
-from functions import *
-from classes import *
+import arcade
+from constants import WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE
+from classes import MainMenuView
 
 def main():
     """ Main function """
