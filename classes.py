@@ -125,6 +125,7 @@ class GameView(arcade.View):
         # Sprite lists
         self.player_list = None
         self.wall_list = None
+        self.floor_list = None
         self.path_list = None  
         self.coin_list = None  
         self.exit_list = None 
@@ -161,6 +162,7 @@ class GameView(arcade.View):
         # Sprite lists
         self.player_list = arcade.SpriteList()
         self.wall_list = arcade.SpriteList()
+        self.floor_list = arcade.SpriteList()
         self.path_list = arcade.SpriteList()  
         self.coin_list = arcade.SpriteList()  
         self.exit_list = arcade.SpriteList() 
@@ -213,6 +215,20 @@ class GameView(arcade.View):
                     wall.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
                     wall.width = SPRITE_SIZE * column_count
                     self.wall_list.append(wall)
+
+        # Create floor tiles for all empty (walkable) spaces in the maze
+        for row in range(MAZE_HEIGHT):
+            for column in range(MAZE_WIDTH):
+                if maze[row][column] == TILE_EMPTY:
+                    floor = arcade.Sprite(
+                        ":resources:images/tiles/grassCenter.png",
+                        scale=SPRITE_SCALING,
+                    )
+                    floor.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
+                    floor.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
+                    # Make floor tiles a tan/beige color to distinguish from background
+                    floor.color = arcade.color.TAN
+                    self.floor_list.append(floor)
 
         # Set up the player
         self.player_sprite = arcade.Sprite(
@@ -280,6 +296,7 @@ class GameView(arcade.View):
         self.camera_sprites.use()
 
         # Draw all the sprites
+        self.floor_list.draw()
         self.wall_list.draw()
         self.path_list.draw()
         self.coin_list.draw()
