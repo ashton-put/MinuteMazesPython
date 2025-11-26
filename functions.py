@@ -45,9 +45,9 @@ def make_maze(maze_width, maze_height):
 
     walk(random.randrange(w), random.randrange(h))
 
-    # Create entrance and exit
-    maze[1][0] = TILE_EMPTY  # Entrance
-    maze[maze_height - 2][maze_width - 1] = TILE_EMPTY  # Exit
+    # Don't create entrance and exit openings - keep walls intact
+    # maze[1][0] = TILE_EMPTY  # Entrance (removed)
+    # maze[maze_height - 2][maze_width - 1] = TILE_EMPTY  # Exit (removed)
 
     return maze
 

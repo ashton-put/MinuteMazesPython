@@ -220,8 +220,8 @@ class GameView(arcade.View):
             scale=SPRITE_SCALING)
         self.player_list.append(self.player_sprite)
 
-        # Place the player at the entrance
-        self.player_sprite.center_x = SPRITE_SIZE / 2
+        # Place the player one tile to the right of the left wall (inside the maze)
+        self.player_sprite.center_x = SPRITE_SIZE + SPRITE_SIZE / 2
         self.player_sprite.center_y = SPRITE_SIZE + SPRITE_SIZE / 2
 
         # Create exit sprite
@@ -229,7 +229,7 @@ class GameView(arcade.View):
             ":resources:images/tiles/signExit.png",
             scale=SPRITE_SCALING,
         )
-        exit_sprite.center_x = (MAZE_WIDTH - 1) * SPRITE_SIZE + SPRITE_SIZE / 2
+        exit_sprite.center_x = (MAZE_WIDTH - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
         exit_sprite.center_y = (MAZE_HEIGHT - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
         self.exit_list.append(exit_sprite)
 
@@ -239,8 +239,8 @@ class GameView(arcade.View):
         self.background_color = arcade.color.AMAZON
 
         # Find path from entrance to exit
-        start = (1, 0)
-        goal = (MAZE_HEIGHT - 2, MAZE_WIDTH - 1)
+        start = (1, 1)
+        goal = (MAZE_HEIGHT - 2, MAZE_WIDTH - 2)
         path = astar(maze, start, goal)
 
         # Draw the path
