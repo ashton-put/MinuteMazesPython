@@ -34,18 +34,3 @@ MAZE_WIDTH = 51
     # If True, we merge sprites into one sprite, with a repeating texture for each cell
     # This reduces our sprite count
 MERGE_SPRITES = True
-
-# How many pixels to keep as a minimum margin between the character
-# and the edge of the screen
-VIEWPORT_MARGIN = 200
-HORIZONTAL_BOUNDARY = WINDOW_WIDTH / 2.0 - VIEWPORT_MARGIN
-VERTICAL_BOUNDARY = WINDOW_HEIGHT / 2.0 - VIEWPORT_MARGIN
-
-# If the player moves further than this boundary away from
-# the camera we use a constraint to move the camera
-CAMERA_BOUNDARY = arcade.LRBT(
-    -HORIZONTAL_BOUNDARY,
-    HORIZONTAL_BOUNDARY,
-    -VERTICAL_BOUNDARY,
-    VERTICAL_BOUNDARY,
-)
