@@ -12,9 +12,9 @@ class MainMenuView(arcade.View):
         super().__init__()
         self.camera_gui = arcade.Camera2D()
 
-    def on_show(self):
+    def on_show_view(self):
         """ This is run once when we switch to this view """
-        arcade.set_background_color(arcade.color.AMAZON)
+        arcade.set_background_color(arcade.color.DARK_BLUE)
 
     def on_draw(self):
         """ Render the screen. """
@@ -23,18 +23,18 @@ class MainMenuView(arcade.View):
         self.camera_gui.use()
         arcade.draw_text("Minute Mazes", self.window.width / 2, self.window.height / 2 + 50,
                          arcade.color.WHITE, font_size=50, anchor_x="center")
-        arcade.draw_text("Press S to Start", self.window.width / 2, self.window.height / 2,
+        arcade.draw_text("Press ENTER to Start", self.window.width / 2, self.window.height / 2,
                          arcade.color.WHITE, font_size=20, anchor_x="center")
-        arcade.draw_text("Press Q to Quit", self.window.width / 2, self.window.height / 2 - 30,
+        arcade.draw_text("Press ESC to Quit", self.window.width / 2, self.window.height / 2 - 30,
                          arcade.color.WHITE, font_size=20, anchor_x="center")
 
     def on_key_press(self, key, modifiers):
         """ Handle key presses. """
-        if key == arcade.key.S:
+        if key == arcade.key.ENTER:
             game_view = GameView()
             game_view.setup()
             self.window.show_view(game_view)
-        elif key == arcade.key.Q:
+        elif key == arcade.key.ESCAPE:
             arcade.close_window()
 
 class InGameMenuView(arcade.View):
@@ -45,7 +45,7 @@ class InGameMenuView(arcade.View):
         self.game_view = game_view
         self.camera_gui = arcade.Camera2D()
 
-    def on_show(self):
+    def on_show_view(self):
         """ This is run once when we switch to this view """
         arcade.set_background_color(arcade.color.GRAY)
 
@@ -56,21 +56,21 @@ class InGameMenuView(arcade.View):
         self.camera_gui.use()
         arcade.draw_text("In-Game Menu", self.window.width / 2, self.window.height / 2 + 50,
                          arcade.color.WHITE, font_size=50, anchor_x="center")
-        arcade.draw_text("Press M to Resume", self.window.width / 2, self.window.height / 2,
+        arcade.draw_text("Press ENTER to Resume", self.window.width / 2, self.window.height / 2,
                          arcade.color.WHITE, font_size=20, anchor_x="center")
-        arcade.draw_text("Press R for Main Menu", self.window.width / 2, self.window.height / 2 - 30,
+        arcade.draw_text("Press SPACE for Main Menu", self.window.width / 2, self.window.height / 2 - 30,
                          arcade.color.WHITE, font_size=20, anchor_x="center")
-        arcade.draw_text("Press Q to Quit", self.window.width / 2, self.window.height / 2 - 60,
+        arcade.draw_text("Press ESC to Quit", self.window.width / 2, self.window.height / 2 - 60,
                          arcade.color.WHITE, font_size=20, anchor_x="center")
 
     def on_key_press(self, key, modifiers):
         """ Handle key presses. """
-        if key == arcade.key.M:
+        if key == arcade.key.ENTER:
             self.window.show_view(self.game_view)
-        elif key == arcade.key.R:
+        elif key == arcade.key.SPACE:
             main_menu_view = MainMenuView()
             self.window.show_view(main_menu_view)
-        elif key == arcade.key.Q:
+        elif key == arcade.key.ESCAPE:
             arcade.close_window()
 
 class CongratulationsView(arcade.View):
@@ -82,7 +82,7 @@ class CongratulationsView(arcade.View):
         self.display_timer = 0
         self.camera_gui = arcade.Camera2D()
 
-    def on_show(self):
+    def on_show_view(self):
         """ This is run once when we switch to this view """
         arcade.set_background_color(arcade.color.GOLDEN_YELLOW)
         self.display_timer = 0
@@ -323,7 +323,7 @@ class GameView(arcade.View):
     # Called whenever a key is pressed
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed. """
-        if key == arcade.key.M:
+        if key == arcade.key.ENTER:
             in_game_menu_view = InGameMenuView(self)
             self.window.show_view(in_game_menu_view)
         elif key == arcade.key.UP:
