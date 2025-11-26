@@ -96,7 +96,7 @@ class CongratulationsView(arcade.View):
 
     def on_show_view(self):
         """ This is run once when we switch to this view """
-        arcade.set_background_color(arcade.color.GOLDEN_YELLOW)
+        arcade.set_background_color(arcade.color.DARK_BLUE)
         self.display_timer = 0
 
     def on_draw(self):
@@ -226,6 +226,18 @@ class GameView(arcade.View):
                     wall.center_x = column_mid * SPRITE_SIZE + SPRITE_SIZE / 2
                     wall.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
                     wall.width = SPRITE_SIZE * column_count
+                    self.wall_list.append(wall)
+
+        # Create individual wall tiles instead of merged sprites for better texture quality
+        for row in range(MAZE_HEIGHT):
+            for column in range(MAZE_WIDTH):
+                if maze[row][column] == TILE_CRATE:
+                    wall = arcade.Sprite(
+                        ":resources:images/tiles/stoneCenter.png",
+                        scale=SPRITE_SCALING,
+                    )
+                    wall.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
+                    wall.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
                     self.wall_list.append(wall)
 
         # Create floor tiles for all empty (walkable) spaces in the maze
