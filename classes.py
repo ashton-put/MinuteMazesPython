@@ -18,6 +18,121 @@ from constants import (
 )
 from functions import make_maze, astar
 
+# Global maze size setting (can be changed in settings)
+MAZE_SIZE_SETTING = 51  # Default to large (options: 21, 31, 51)
+
+
+class SettingsView(arcade.View):
+    """ Settings Menu View with maze size options """
+
+    def __init__(self):
+        super().__init__()
+        self.ui = arcade.gui.UIManager()
+        
+        # Create main layout
+        root = arcade.gui.UIAnchorLayout()
+        
+        # Create vertical box for menu items
+        menu_box = arcade.gui.UIBoxLayout(vertical=True, space_between=20)
+        
+        # Add title
+        title = arcade.gui.UILabel(
+            text="Settings",
+            font_size=50,
+            text_color=arcade.color.WHITE,
+            bold=True
+        )
+        menu_box.add(title)
+        
+        menu_box.add(arcade.gui.UISpace(height=30))
+        
+        # Add maze size label
+        size_label = arcade.gui.UILabel(
+            text="Maze Size",
+            font_size=24,
+            text_color=arcade.color.WHITE
+        )
+        menu_box.add(size_label)
+        
+        menu_box.add(arcade.gui.UISpace(height=10))
+        
+        # Create size buttons
+        small_button = arcade.gui.UIFlatButton(
+            text="Small (21x21)",
+            width=250,
+            height=50,
+            style=arcade.gui.UIFlatButton.STYLE_BLUE if MAZE_SIZE_SETTING == 21 else None
+        )
+        menu_box.add(small_button)
+        
+        @small_button.event("on_click")
+        def on_small_click(_):
+            global MAZE_SIZE_SETTING
+            MAZE_SIZE_SETTING = 21
+            self.window.show_view(SettingsView())  # Refresh view to show updated selection
+        
+        medium_button = arcade.gui.UIFlatButton(
+            text="Medium (31x31)",
+            width=250,
+            height=50,
+            style=arcade.gui.UIFlatButton.STYLE_BLUE if MAZE_SIZE_SETTING == 31 else None
+        )
+        menu_box.add(medium_button)
+        
+        @medium_button.event("on_click")
+        def on_medium_click(_):
+            global MAZE_SIZE_SETTING
+            MAZE_SIZE_SETTING = 31
+            self.window.show_view(SettingsView())  # Refresh view to show updated selection
+        
+        large_button = arcade.gui.UIFlatButton(
+            text="Large (51x51)",
+            width=250,
+            height=50,
+            style=arcade.gui.UIFlatButton.STYLE_BLUE if MAZE_SIZE_SETTING == 51 else None
+        )
+        menu_box.add(large_button)
+        
+        @large_button.event("on_click")
+        def on_large_click(_):
+            global MAZE_SIZE_SETTING
+            MAZE_SIZE_SETTING = 51
+            self.window.show_view(SettingsView())  # Refresh view to show updated selection
+        
+        menu_box.add(arcade.gui.UISpace(height=30))
+        
+        # Back to main menu button
+        back_button = arcade.gui.UIFlatButton(
+            text="Back to Main Menu",
+            width=250,
+            height=50,
+            style=arcade.gui.UIFlatButton.STYLE_RED
+        )
+        menu_box.add(back_button)
+        
+        @back_button.event("on_click")
+        def on_back_click(_):
+            main_menu = MainMenuView()
+            self.window.show_view(main_menu)
+        
+        # Center the menu
+        root.add(menu_box, anchor_x="center", anchor_y="center")
+        self.ui.add(root)
+
+    def on_show_view(self):
+        """ This is run once when we switch to this view """
+        arcade.set_background_color(arcade.color.DARK_BLUE)
+        self.ui.enable()
+
+    def on_hide_view(self):
+        """ Disable UI when leaving view """
+        self.ui.disable()
+
+    def on_draw(self):
+        """ Render the screen. """
+        self.clear()
+        self.ui.draw()
+
 
 class MainMenuView(arcade.View):
     """ Main Menu View with GUI widgets """
@@ -58,6 +173,20 @@ class MainMenuView(arcade.View):
             game_view = GameView()
             game_view.setup()
             self.window.show_view(game_view)
+        
+        # Create settings button
+        settings_button = arcade.gui.UIFlatButton(
+            text="Settings",
+            width=250,
+            height=50,
+            style=arcade.gui.UIFlatButton.STYLE_BLUE
+        )
+        menu_box.add(settings_button)
+        
+        @settings_button.event("on_click")
+        def on_settings_click(_):
+            settings_view = SettingsView()
+            self.window.show_view(settings_view)
         
         # Create quit button
         quit_button = arcade.gui.UIFlatButton(
@@ -259,9 +388,9 @@ class CongratulationsView(arcade.View):
             )
             content_box.add(best_time_label)
         
-        # Add completed mazes count
+        # Add completed mazes count (add 1 since this maze was just completed)
         mazes_label = arcade.gui.UILabel(
-            text=f"Mazes Completed: {self.game_view.completed_mazes}",
+            text=f"Mazes Completed: {self.game_view.completed_mazes + 1}",
             font_size=20,
             text_color=arcade.color.LIGHT_GRAY
         )
@@ -475,15 +604,15 @@ class GameView(arcade.View):
         # Don't reset elapsed_time here - it's reset in CongratulationsView
         # Don't reset completed_mazes - we want to keep the count
 
-        # Create the maze
-        maze = make_maze(MAZE_WIDTH, MAZE_HEIGHT)
+        # Create the maze using the current size setting
+        maze = make_maze(MAZE_SIZE_SETTING, MAZE_SIZE_SETTING)
 
         # Create sprites based on 2D grid
         if not MERGE_SPRITES:
             # This is the simple-to-understand method. Each grid location
             # is a sprite
-            for row in range(MAZE_HEIGHT):
-                for column in range(MAZE_WIDTH):
+            for row in range(MAZE_SIZE_SETTING):
+                for column in range(MAZE_SIZE_SETTING):
                     if maze[row][column] == TILE_CRATE:
                         wall = arcade.Sprite(
                             ":resources:images/tiles/grassCenter.png",
@@ -497,7 +626,7 @@ class GameView(arcade.View):
             # larger sprite with a repeating texture. So if there are multiple
             # cells in a row with a wall, we merge them into one sprite, with a
             # repeating texture for each cell. This reduces our sprite count
-            for row in range(MAZE_HEIGHT):
+            for row in range(MAZE_SIZE_SETTING):
                 column = 0
                 while column < len(maze):
                     while column < len(maze) and maze[row][column] == TILE_EMPTY:
@@ -521,8 +650,8 @@ class GameView(arcade.View):
                     self.wall_list.append(wall)
 
         # Create individual wall tiles instead of merged sprites for better texture quality
-        for row in range(MAZE_HEIGHT):
-            for column in range(MAZE_WIDTH):
+        for row in range(MAZE_SIZE_SETTING):
+            for column in range(MAZE_SIZE_SETTING):
                 if maze[row][column] == TILE_CRATE:
                     wall = arcade.Sprite(
                         ":resources:images/tiles/stoneCenter.png",
@@ -533,8 +662,8 @@ class GameView(arcade.View):
                     self.wall_list.append(wall)
 
         # Create floor tiles for all empty (walkable) spaces in the maze
-        for row in range(MAZE_HEIGHT):
-            for column in range(MAZE_WIDTH):
+        for row in range(MAZE_SIZE_SETTING):
+            for column in range(MAZE_SIZE_SETTING):
                 if maze[row][column] == TILE_EMPTY:
                     floor = arcade.Sprite(
                         ":resources:images/tiles/grassCenter.png",
@@ -561,8 +690,8 @@ class GameView(arcade.View):
             ":resources:images/tiles/boxCrate_double.png",
             scale=SPRITE_SCALING,
         )
-        black_tile.center_x = (MAZE_WIDTH - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
-        black_tile.center_y = (MAZE_HEIGHT - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
+        black_tile.center_x = (MAZE_SIZE_SETTING - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
+        black_tile.center_y = (MAZE_SIZE_SETTING - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
         black_tile.color = arcade.color.BLACK
         self.path_list.append(black_tile)
 
@@ -571,8 +700,8 @@ class GameView(arcade.View):
             ":resources:images/tiles/signExit.png",
             scale=SPRITE_SCALING,
         )
-        exit_sprite.center_x = (MAZE_WIDTH - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
-        exit_sprite.center_y = (MAZE_HEIGHT - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
+        exit_sprite.center_x = (MAZE_SIZE_SETTING - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
+        exit_sprite.center_y = (MAZE_SIZE_SETTING - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
         self.exit_list.append(exit_sprite)
 
         self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.wall_list)
@@ -583,10 +712,10 @@ class GameView(arcade.View):
         # Randomly place coins in the maze
         # Only place on verified empty tiles, and avoid player/exit positions
         player_pos = (1, 1)
-        exit_pos = (MAZE_HEIGHT - 2, MAZE_WIDTH - 2)
+        exit_pos = (MAZE_SIZE_SETTING - 2, MAZE_SIZE_SETTING - 2)
         
-        for row in range(1, MAZE_HEIGHT - 1):
-            for column in range(1, MAZE_WIDTH - 1):
+        for row in range(1, MAZE_SIZE_SETTING - 1):
+            for column in range(1, MAZE_SIZE_SETTING - 1):
                 # Check if tile is empty, not player/exit position, and random chance
                 if (maze[row][column] == TILE_EMPTY and 
                     (row, column) != player_pos and 
@@ -661,7 +790,7 @@ class GameView(arcade.View):
     # Called whenever a key is pressed
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed. """
-        if key == arcade.key.ENTER:
+        if key in (arcade.key.ENTER, arcade.key.ESCAPE):
             in_game_menu_view = InGameMenuView(self)
             self.window.show_view(in_game_menu_view)
         elif key == arcade.key.R:
