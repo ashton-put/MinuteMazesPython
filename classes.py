@@ -538,6 +538,10 @@ class GameView(arcade.View):
         # We scroll the 'sprite world' but not the GUI.
         self.camera_sprites = arcade.Camera2D()
         self.camera_gui = arcade.Camera2D()
+        
+        # Load textures for left and right facing mouse
+        self.mouse_texture_left = arcade.load_texture(":resources:images/enemies/mouse.png")
+        self.mouse_texture_right = self.mouse_texture_left.flip_left_right()
 
         # Elapsed time
         self.elapsed_time = 0
@@ -675,10 +679,12 @@ class GameView(arcade.View):
                     floor.color = arcade.color.TAN
                     self.floor_list.append(floor)
 
-        # Set up the player
+        # Set up the player with left-facing texture
         self.player_sprite = arcade.Sprite(
-            ":resources:images/animated_characters/male_person/malePerson_idle.png",
             scale=SPRITE_SCALING)
+        # Set up both textures - left at index 0, right at index 1
+        self.player_sprite.textures = [self.mouse_texture_left, self.mouse_texture_right]
+        self.player_sprite.texture = self.mouse_texture_left
         self.player_list.append(self.player_sprite)
 
         # Place the player one tile to the right of the left wall (inside the maze)
@@ -786,6 +792,12 @@ class GameView(arcade.View):
             # Moving diagonally, so normalize to maintain constant speed
             self.player_sprite.change_x *= 0.7071  # 1/sqrt(2)
             self.player_sprite.change_y *= 0.7071
+        
+        # Update sprite direction based on horizontal movement
+        if self.player_sprite.change_x < 0:
+            self.player_sprite.texture = self.player_sprite.textures[0]  # Face left
+        elif self.player_sprite.change_x > 0:
+            self.player_sprite.texture = self.player_sprite.textures[1]  # Face right
 
     # Called whenever a key is pressed
     def on_key_press(self, key, modifiers):
