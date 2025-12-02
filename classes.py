@@ -17,7 +17,7 @@ from constants import (
 from functions import make_maze, astar
 
 # Global maze size setting (can be changed in settings)
-MAZE_SIZE_SETTING = 51  # Default to large (options: 21, 31, 51)
+MAZE_SIZE_SETTING = 21  # Default to small (options: 21, 31, 51)
 
 # Global mouse color setting (can be changed in settings)
 MOUSE_COLOR_SETTING = "white"  # Default to white (options: "white", "grey", "brown")
@@ -506,13 +506,31 @@ class CongratulationsView(arcade.View):
         )
         content_box.add(subtitle)
         
-        content_box.add(arcade.gui.UISpace(height=20))
+        content_box.add(arcade.gui.UISpace(height=30))
+
+        # Add score label
+        score_text = f"Score: {self.game_view.score:.1f}"
+        score_label = arcade.gui.UILabel(
+            text=score_text,
+            font_size=15,
+            text_color=arcade.color.LIGHT_GRAY
+        )
+        content_box.add(score_label)
+
+        # Add total score label
+        grand_total_score_text = f"Total Score: {self.game_view.grand_total_score:.1f}"
+        grand_total_score_label = arcade.gui.UILabel(
+            text=grand_total_score_text,
+            font_size=15,
+            text_color=arcade.color.LIGHT_GRAY
+        )
+        content_box.add(grand_total_score_label)
         
         # Add time label
         time_text = f"Time: {self.game_view.elapsed_time:.1f} seconds"
         time_label = arcade.gui.UILabel(
             text=time_text,
-            font_size=24,
+            font_size=15,
             text_color=arcade.color.LIGHT_GRAY
         )
         content_box.add(time_label)
@@ -522,13 +540,13 @@ class CongratulationsView(arcade.View):
             if (self.game_view.elapsed_time < self.game_view.best_time):
                 best_time_label = arcade.gui.UILabel(
                 text=f"Best Time: {self.game_view.elapsed_time:.1f} seconds",
-                font_size=20,
+                font_size=15,
                 text_color=arcade.color.YELLOW
             )
             else:
                 best_time_label = arcade.gui.UILabel(
                 text=f"Best Time: {self.game_view.best_time:.1f} seconds",
-                font_size=20,
+                font_size=15,
                 text_color=arcade.color.YELLOW
             )
             content_box.add(best_time_label)
@@ -536,7 +554,7 @@ class CongratulationsView(arcade.View):
         # Add completed mazes count (add 1 since this maze was just completed)
         mazes_label = arcade.gui.UILabel(
             text=f"Mazes Completed: {self.game_view.completed_mazes + 1}",
-            font_size=20,
+            font_size=15,
             text_color=arcade.color.LIGHT_GRAY
         )
         content_box.add(mazes_label)
