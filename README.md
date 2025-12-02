@@ -1,10 +1,7 @@
 ![Minute Mazes](images/misc/example.png)
 
 # Description: 
-Minute mazes is a basic game where the player has to navigate through a maze to reach the exit. The maze is generated with a depth-first search algorithm and constructed with Python Arcade 3.3.3. The player can move up, down, left, and right. The player can collect cheese in the maze and their score is displayed on the screen along with elapsed time for each maze.
-
-# Game Story (rough draft):
-The year is 2052. You are just one of many bio-engineered lab mice that have been created to test newly developed brain enhancements before they are approved and made available to the public. While countless mice in the past have solved mazes with the promise of cheese at the end as a reward; you have been engineered, bred, and cybernetically enhanced to be focused on just one thing: solving mazes as quickly as possible and with as high a cheese score as possible.
+Minute mazes is a game where the player must navigate through a series of mazes. Each maze is generated with a depth-first search algorithm and is constructed with Python Arcade. The player can move up, down, left, and right. The player can collect cheese in the maze and their score is displayed on the screen along with elapsed time for each maze. The player has an ability called "Pathfinder" that reveals a portion of the shortest path to the exit for a limited time. The game includes sound effects for collecting cheese, using abilities, and reaching the exit. The player can customize the maze size, mouse color, and sound volume in the settings menu.
 
 ### Setup
 ```
@@ -38,7 +35,7 @@ Sound Volume: 75%
 | Back to Main Menu |
 ```
 
-- ```| Start Game |``` starts the game with the selected maze size.
+- ```| Start Game |``` starts the game with the selected maze size and mouse color.
 
 - During gameplay:
 
