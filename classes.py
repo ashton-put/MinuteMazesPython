@@ -730,6 +730,26 @@ class GameView(arcade.View):
         # Set the background color
         self.background_color = arcade.color.TEAL
 
+        # # Find path from player to exit
+        # start = (1, 1)
+        # goal = (MAZE_SIZE_SETTING - 2, MAZE_SIZE_SETTING - 2)
+        # path = astar(maze, start, goal)
+
+        # # Draw the path
+        # if path:
+        #     for (row, column) in path:
+        #         path_sprite = arcade.Sprite(
+        #             "images/tiles/blank.png",
+        #             scale=SPRITE_SCALING,
+        #         )
+        #         path_sprite.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
+        #         path_sprite.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
+
+        #         # SET PATH COLOR
+        #         path_sprite.color = arcade.color.RED
+
+        #         self.path_list.append(path_sprite)  # Add path sprites to path_list
+
         # Randomly place coins in the maze
         # Only place on verified empty tiles, and avoid player/exit positions
         player_pos = (1, 1)
