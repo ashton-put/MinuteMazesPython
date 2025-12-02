@@ -101,7 +101,7 @@ class MainMenuView(arcade.View):
 
     def on_show_view(self):
         """ This is run once when we switch to this view """
-        arcade.set_background_color(arcade.color.DARK_BLUE)
+        arcade.set_background_color(arcade.color.TEAL)
         self.ui.enable()
 
     def on_hide_view(self):
@@ -386,7 +386,14 @@ class CongratulationsView(arcade.View):
         
         # Add best time if it exists
         if self.game_view.best_time is not None:
-            best_time_label = arcade.gui.UILabel(
+            if (self.game_view.elapsed_time < self.game_view.best_time):
+                best_time_label = arcade.gui.UILabel(
+                text=f"Best Time: {self.game_view.elapsed_time:.1f} seconds",
+                font_size=20,
+                text_color=arcade.color.YELLOW
+            )
+            else:
+                best_time_label = arcade.gui.UILabel(
                 text=f"Best Time: {self.game_view.best_time:.1f} seconds",
                 font_size=20,
                 text_color=arcade.color.YELLOW
@@ -477,7 +484,7 @@ class CongratulationsView(arcade.View):
 
     def on_show_view(self):
         """ This is run once when we switch to this view """
-        arcade.set_background_color(arcade.color.DARK_BLUE)
+        arcade.set_background_color(arcade.color.TEAL)
         self.display_timer = 0
         self.ui.enable()
 
@@ -493,7 +500,7 @@ class CongratulationsView(arcade.View):
     def on_update(self, delta_time):
         """ Update the view """
         self.display_timer += delta_time
-        if self.display_timer >= CONGRATULATIONS_DELAY:  # After 3 seconds
+        if self.display_timer >= CONGRATULATIONS_DELAY:  # After a few seconds
             # Update best time
             if self.game_view.best_time is None or self.game_view.elapsed_time < self.game_view.best_time:
                 self.game_view.best_time = self.game_view.elapsed_time
