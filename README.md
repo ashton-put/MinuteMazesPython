@@ -1,4 +1,4 @@
-![Minute Mazes](images/random/example.png)
+![Minute Mazes](images/misc/example.png)
 
 # Description: 
 Minute mazes is a basic game where the player has to navigate through a maze to reach the exit. The maze is generated with a depth-first search algorithm and constructed with Python Arcade 3.3.3. The player can move up, down, left, and right. The player can collect cheese in the maze and their score is displayed on the screen along with elapsed time for each maze.
