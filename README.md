@@ -1,4 +1,5 @@
-![Minute Mazes Logo](images/random/close-up-of-a-mouse-in-a-maze2.jpg)
+![Minute Mazes](images/random/example.png)
+
 
 
 # Description: 
@@ -21,11 +22,14 @@ python play.py
 |    Quit    |
 ```
 
-- In the 'Settings' menu, the player can adjust the maze size:
+- In the 'Settings' menu, the player can adjust the maze size or effects volume:
 ```
-|   Small (21x21)   |
-|   Medium (31x31)  |
-|   Large (51x51)   |
+Maze Size:
+| Small (21x21) | Medium (31x31) | Large (51x51) |
+
+Sound Volume: 75%
+
+|---------*---|
 
 | Back to Main Menu |
 ```
@@ -41,8 +45,14 @@ WASD / Arrow Keys = Move through maze
     SPACE BAR     = Pathfinder ability (shows 10 tiles of the shortest path to the exit for 3 seconds, 3 uses per maze)
 ```
 
+  - In the pause menu the player can choose to resume the game, access settings, return to the main menu, or quit the game.
 
 
+  ### Image Citations and Tools
+  - https://www.photopea.com/ 
+  - https://www.youtube.com/watch?v=dMGIkO3xh1U 
+  - https://www.remove.bg/ 
 
-
-  - In the pause menu the player can choose to resume the game, restart the current maze, return to the main menu, or quit the game.
+  - https://www.freepik.com/icon/mouse_5511456
+  - https://pngimg.com/image/25292 
+  - https://www.freepik.com/icon/mouse-toy_2830550

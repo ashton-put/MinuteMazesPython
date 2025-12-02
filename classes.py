@@ -618,7 +618,7 @@ class GameView(arcade.View):
         self.camera_gui = arcade.Camera2D()
         
         # Load textures for left and right facing mouse
-        self.mouse_texture_left = arcade.load_texture("images/sprites/mouse.png")
+        self.mouse_texture_left = arcade.load_texture("images/sprites/white_mouse.png")
         self.mouse_texture_right = self.mouse_texture_left.flip_left_right()
 
         # Elapsed time
@@ -717,7 +717,7 @@ class GameView(arcade.View):
                 for column in range(MAZE_SIZE_SETTING):
                     if maze[row][column] == TILE_CRATE:
                         wall = arcade.Sprite(
-                            "images/tiles/blank.png",
+                            "images/tiles/blankTile.png",
                             scale=SPRITE_SCALING,
                         )
                         wall.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
@@ -743,7 +743,7 @@ class GameView(arcade.View):
                     
                     # Set wall sprite
                     wall = arcade.Sprite(
-                        "images/tiles/blank.png",
+                        "images/tiles/blankTile.png",
                         scale=SPRITE_SCALING,
                     )
                     wall.center_x = column_mid * SPRITE_SIZE + SPRITE_SIZE / 2
@@ -760,7 +760,7 @@ class GameView(arcade.View):
         #     for column in range(MAZE_SIZE_SETTING):
         #         if maze[row][column] == TILE_CRATE:
         #             wall = arcade.Sprite(
-        #                 "images/tiles/blank.png",
+        #                 "images/tiles/blankTile.png",
         #                 scale=SPRITE_SCALING,
         #             )
         #             wall.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
@@ -776,7 +776,7 @@ class GameView(arcade.View):
             for column in range(MAZE_SIZE_SETTING):
                 if maze[row][column] == TILE_EMPTY:
                     floor = arcade.Sprite(
-                        "images/tiles/blank.png",
+                        "images/tiles/blankTile.png",
                         scale=SPRITE_SCALING,
                     )
                     floor.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
@@ -802,7 +802,7 @@ class GameView(arcade.View):
 
         # Create black tile at exit position (will be drawn under the exit sign)
         black_tile = arcade.Sprite(
-            "images/tiles/blank.png",
+            "images/tiles/blankTile.png",
             scale=SPRITE_SCALING,
         )
         black_tile.center_x = (MAZE_SIZE_SETTING - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
@@ -837,7 +837,7 @@ class GameView(arcade.View):
                     (row, column) != exit_pos and 
                     random.random() < 0.08):  # 8% chance to place a coin
                     coin = arcade.Sprite(
-                        "images/items/cheese2.png",
+                        "images/items/cheese.png",
                         scale=SPRITE_SCALING,
                     )
                     coin.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
@@ -1053,7 +1053,7 @@ class GameView(arcade.View):
             
             for (row, column) in limited_path:
                 path_sprite = arcade.Sprite(
-                    "images/tiles/blank.png",
+                    "images/tiles/blankTile.png",
                     scale=SPRITE_SCALING,
                 )
                 # Convert grid coordinates back to pixel coordinates
