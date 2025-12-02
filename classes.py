@@ -73,7 +73,7 @@ class MainMenuView(arcade.View):
         
         @settings_button.event("on_click")
         def on_settings_click(_):
-            settings_view = SettingsView()
+            settings_view = SettingsView(previous_view=None)
             self.window.show_view(settings_view)
         
         # Create quit button
@@ -119,8 +119,9 @@ class MainMenuView(arcade.View):
 # Settings Menu View with maze size options
 class SettingsView(arcade.View):
 
-    def __init__(self):
+    def __init__(self, previous_view=None):
         super().__init__()
+        self.previous_view = previous_view  # Store the view that opened settings
         self.ui = arcade.gui.UIManager()
         
         # Create main layout
@@ -168,7 +169,7 @@ class SettingsView(arcade.View):
         def on_small_click(_):
             global MAZE_SIZE_SETTING
             MAZE_SIZE_SETTING = 21
-            self.window.show_view(SettingsView())  # Refresh view to show updated selection
+            self.window.show_view(SettingsView(previous_view=self.previous_view))  # Preserve previous view
         
         medium_button = arcade.gui.UIFlatButton(
             text="Medium",
@@ -182,7 +183,7 @@ class SettingsView(arcade.View):
         def on_medium_click(_):
             global MAZE_SIZE_SETTING
             MAZE_SIZE_SETTING = 31
-            self.window.show_view(SettingsView())  # Refresh view to show updated selection
+            self.window.show_view(SettingsView(previous_view=self.previous_view))  # Preserve previous view
         
         large_button = arcade.gui.UIFlatButton(
             text="Large",
@@ -196,7 +197,7 @@ class SettingsView(arcade.View):
         def on_large_click(_):
             global MAZE_SIZE_SETTING
             MAZE_SIZE_SETTING = 51
-            self.window.show_view(SettingsView())  # Refresh view to show updated selection
+            self.window.show_view(SettingsView(previous_view=self.previous_view))  # Preserve previous view
         
         menu_box.add(size_button_box)
         
@@ -246,9 +247,10 @@ class SettingsView(arcade.View):
         
         menu_box.add(arcade.gui.UISpace(height=15))
         
-        # Back to main menu button
+        # Back button - returns to previous view or main menu
+        back_text = "Back" if self.previous_view else "Back to Main Menu"
         back_button = arcade.gui.UIFlatButton(
-            text="Back to Main Menu",
+            text=back_text,
             width=250,
             height=45,
             style=arcade.gui.UIFlatButton.STYLE_RED
@@ -257,8 +259,13 @@ class SettingsView(arcade.View):
         
         @back_button.event("on_click")
         def on_back_click(_):
-            main_menu = MainMenuView()
-            self.window.show_view(main_menu)
+            if self.previous_view:
+                # Return to the view that opened settings (e.g., InGameMenuView)
+                self.window.show_view(self.previous_view)
+            else:
+                # No previous view, return to main menu
+                main_menu = MainMenuView()
+                self.window.show_view(main_menu)
         
         # Center the menu
         root.add(menu_box, anchor_x="center", anchor_y="center")
@@ -325,19 +332,19 @@ class InGameMenuView(arcade.View):
         def on_resume_click(_):
             self.window.show_view(self.game_view)
         
-        # Create restart button
-        restart_button = arcade.gui.UIFlatButton(
-            text="Restart Maze",
+        # Create settings button
+        settings_button = arcade.gui.UIFlatButton(
+            text="Settings",
             width=250,
             height=50,
             style=arcade.gui.UIFlatButton.STYLE_BLUE
         )
-        menu_box.add(restart_button)
+        menu_box.add(settings_button)
         
-        @restart_button.event("on_click")
-        def on_restart_click(_):
-            self.game_view.restart_maze()
-            self.window.show_view(self.game_view)
+        @settings_button.event("on_click")
+        def on_settings_click(_):
+            settings_view = SettingsView(previous_view=self)
+            self.window.show_view(settings_view)
         
         # Create main menu button
         main_menu_button = arcade.gui.UIFlatButton(
