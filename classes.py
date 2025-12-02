@@ -19,6 +19,9 @@ from functions import make_maze, astar
 # Global maze size setting (can be changed in settings)
 MAZE_SIZE_SETTING = 51  # Default to large (options: 21, 31, 51)
 
+# Global mouse color setting (can be changed in settings)
+MOUSE_COLOR_SETTING = "white"  # Default to white (options: "white", "grey", "brown")
+
 # Global volume setting (can be changed in settings)
 VOLUME_SETTING = 0.5  # Default to 50% (range: 0.0 to 1.0)
 
@@ -202,12 +205,72 @@ class SettingsView(arcade.View):
         menu_box.add(size_button_box)
         
         menu_box.add(arcade.gui.UISpace(height=15))
+
+        # Mouse color section
+        mouse_label = arcade.gui.UILabel(
+            text="Mouse Color",
+            font_size=20,
+            text_color=arcade.color.WHITE,
+            bold=True
+        )
+        menu_box.add(mouse_label)
+        
+        menu_box.add(arcade.gui.UISpace(height=5))
+        
+        # Create horizontal box for mouse color buttons
+        mouse_button_box = arcade.gui.UIBoxLayout(vertical=False, space_between=10)
+        
+        white_button = arcade.gui.UIFlatButton(
+            text="White",
+            width=75,
+            height=40,
+            style=arcade.gui.UIFlatButton.STYLE_BLUE if MOUSE_COLOR_SETTING == "white" else None
+        )
+        mouse_button_box.add(white_button)
+        
+        @white_button.event("on_click")
+        def on_white_click(_):
+            global MOUSE_COLOR_SETTING
+            MOUSE_COLOR_SETTING = "white"
+            self.window.show_view(SettingsView(previous_view=self.previous_view))
+        
+        grey_button = arcade.gui.UIFlatButton(
+            text="Grey",
+            width=75,
+            height=40,
+            style=arcade.gui.UIFlatButton.STYLE_BLUE if MOUSE_COLOR_SETTING == "grey" else None
+        )
+        mouse_button_box.add(grey_button)
+        
+        @grey_button.event("on_click")
+        def on_grey_click(_):
+            global MOUSE_COLOR_SETTING
+            MOUSE_COLOR_SETTING = "grey"
+            self.window.show_view(SettingsView(previous_view=self.previous_view))
+        
+        brown_button = arcade.gui.UIFlatButton(
+            text="Brown",
+            width=75,
+            height=40,
+            style=arcade.gui.UIFlatButton.STYLE_BLUE if MOUSE_COLOR_SETTING == "brown" else None
+        )
+        mouse_button_box.add(brown_button)
+        
+        @brown_button.event("on_click")
+        def on_brown_click(_):
+            global MOUSE_COLOR_SETTING
+            MOUSE_COLOR_SETTING = "brown"
+            self.window.show_view(SettingsView(previous_view=self.previous_view))
+        
+        menu_box.add(mouse_button_box)
+        
+        menu_box.add(arcade.gui.UISpace(height=15))
         
         # Volume section - combine label and percentage
         volume_header_box = arcade.gui.UIBoxLayout(vertical=False, space_between=10)
         
         volume_label = arcade.gui.UILabel(
-            text="Sound Volume:",
+            text="Volume:",
             font_size=20,
             text_color=arcade.color.WHITE,
             bold=True
@@ -616,10 +679,6 @@ class GameView(arcade.View):
         # We scroll the 'sprite world' but not the GUI.
         self.camera_sprites = arcade.Camera2D()
         self.camera_gui = arcade.Camera2D()
-        
-        # Load textures for left and right facing mouse
-        self.mouse_texture_left = arcade.load_texture("images/sprites/white_mouse.png")
-        self.mouse_texture_right = self.mouse_texture_left.flip_left_right()
 
         # Elapsed time
         self.elapsed_time = 0
@@ -692,6 +751,14 @@ class GameView(arcade.View):
 
         self.score = 0
 
+        # Set camera zoom
+        self.camera_sprites.zoom = 2.0
+
+        # Load textures for left and right facing mouse based on setting
+        mouse_filename = f"images/sprites/{MOUSE_COLOR_SETTING}_mouse.png"
+        self.mouse_texture_right = arcade.load_texture(mouse_filename)
+        self.mouse_texture_left = self.mouse_texture_right.flip_left_right()
+
         # Sound effects
         self.coin_sound = arcade.Sound("sounds/collect.wav")
         self.pathfinder_sound = arcade.Sound("sounds/pathfinder.wav")
@@ -755,22 +822,6 @@ class GameView(arcade.View):
 
                     self.wall_list.append(wall)
 
-        # # Create individual wall tiles instead of merged sprites for better texture quality
-        # for row in range(MAZE_SIZE_SETTING):
-        #     for column in range(MAZE_SIZE_SETTING):
-        #         if maze[row][column] == TILE_CRATE:
-        #             wall = arcade.Sprite(
-        #                 "images/tiles/blankTile.png",
-        #                 scale=SPRITE_SCALING,
-        #             )
-        #             wall.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
-        #             wall.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
-                    
-        #             # SET MAZE WALL COLOR
-        #             wall.color = arcade.color.DODGER_BLUE
-                    
-        #             self.wall_list.append(wall)
-
         # Create floor tiles for all empty (walkable) spaces in the maze
         for row in range(MAZE_SIZE_SETTING):
             for column in range(MAZE_SIZE_SETTING):
@@ -793,7 +844,7 @@ class GameView(arcade.View):
         
         # Set up both textures - left at index 0, right at index 1
         self.player_sprite.textures = [self.mouse_texture_left, self.mouse_texture_right]
-        self.player_sprite.texture = self.mouse_texture_left
+        self.player_sprite.texture = self.mouse_texture_right
         self.player_list.append(self.player_sprite)
 
         # Place the player one tile to the right of the left wall (inside the maze)
@@ -982,7 +1033,7 @@ class GameView(arcade.View):
                 coin.visible = False
                 self.score += 1
                 self.grand_total_score += 1
-                self.coin_sound.play(volume=0.5 * VOLUME_SETTING)
+                self.coin_sound.play(volume=0.3 * VOLUME_SETTING)
 
         # Check if player reached the exit (player must be fully on the exit tile)
         exit_sprite = self.exit_list[0]
@@ -998,7 +1049,7 @@ class GameView(arcade.View):
             self.player_sprite.center_x < exit_tile_right and
             self.player_sprite.center_y > exit_tile_bottom and 
             self.player_sprite.center_y < exit_tile_top):
-            self.exit_sound.play(volume=0.6 * VOLUME_SETTING)
+            self.exit_sound.play(volume=0.3 * VOLUME_SETTING)
             # Show congratulations view
             congratulations_view = CongratulationsView(self)
             self.window.show_view(congratulations_view)
