@@ -212,7 +212,7 @@ class SettingsView(arcade.View):
 
     def on_show_view(self):
         """ This is run once when we switch to this view """
-        arcade.set_background_color(arcade.color.DARK_BLUE)
+        arcade.set_background_color(arcade.color.TEAL)
         self.ui.enable()
 
     def on_hide_view(self):
@@ -743,7 +743,7 @@ class GameView(arcade.View):
                     (row, column) != exit_pos and 
                     random.random() < 0.08):  # 8% chance to place a coin
                     coin = arcade.Sprite(
-                        "images/items/cheese.png",
+                        "images/items/cheese2.png",
                         scale=SPRITE_SCALING,
                     )
                     coin.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
