@@ -232,6 +232,15 @@ class InGameMenuView(arcade.View):
         self.game_view = game_view
         self.ui = arcade.gui.UIManager()
         
+        # Clear pathfinder when entering pause menu
+        if hasattr(game_view, 'pathfinder_active') and game_view.pathfinder_active:
+            black_tile = game_view.path_list[0] if len(game_view.path_list) > 0 else None
+            game_view.path_list = arcade.SpriteList()
+            if black_tile:
+                game_view.path_list.append(black_tile)
+            game_view.pathfinder_active = False
+            game_view.pathfinder_timer = 0.0
+        
         # Create main layout
         root = arcade.gui.UIAnchorLayout()
         
@@ -596,13 +605,14 @@ class GameView(arcade.View):
         self.down_pressed = False
         
         # Clear pathfinder visualization
-        if hasattr(self, 'path_visible'):
-            if self.path_visible:
+        if hasattr(self, 'pathfinder_active'):
+            if self.pathfinder_active:
                 black_tile = self.path_list[0] if len(self.path_list) > 0 else None
                 self.path_list = arcade.SpriteList()
                 if black_tile:
                     self.path_list.append(black_tile)
-                self.path_visible = False
+                self.pathfinder_active = False
+                self.pathfinder_timer = 0.0
         
         # Reset camera to player
         self.camera_sprites.position = (self.player_sprite.center_x, self.player_sprite.center_y)
@@ -621,10 +631,17 @@ class GameView(arcade.View):
 
         self.score = 0
 
+        # Pathfinder power variables
+        self.pathfinder_uses_remaining = 3  # Uses available
+        self.pathfinder_max_uses = 3  # Maximum uses per maze
+        self.pathfinder_active = False  # Is path currently shown?
+        self.pathfinder_timer = 0.0  # Timer for auto-hide
+        self.pathfinder_duration = 5.0  # How long path stays visible (seconds)
+        self.pathfinder_max_tiles = 10  # Maximum path tiles to show
+
         # Create the maze using the current size setting
         maze = make_maze(MAZE_SIZE_SETTING, MAZE_SIZE_SETTING)
         self.maze = maze  # Store maze for pathfinding
-        self.path_visible = False  # Track if pathfinder path is shown
 
         # Create sprites based on 2D grid
         if not MERGE_SPRITES:
@@ -795,6 +812,10 @@ class GameView(arcade.View):
         output = f"Completed: {self.completed_mazes}"
         arcade.draw_text(output, 20, WINDOW_HEIGHT - 80, arcade.color.WHITE, 16)
 
+        # Draw pathfinder uses remaining
+        output = f"Pathfinder: {self.pathfinder_uses_remaining}/{self.pathfinder_max_uses}"
+        arcade.draw_text(output, 20, WINDOW_HEIGHT - 100, arcade.color.LIGHT_BLUE, 16, bold=True)
+
 
     # Calculate speed based on the keys pressed
     def update_player_speed(self):
@@ -834,24 +855,21 @@ class GameView(arcade.View):
 
         # Pathfinder
         elif key == arcade.key.P:
-            # Toggle pathfinder visualization
-            if self.path_visible:
-                # Clear path sprites (keep only the black tile at exit)
-                # The black tile is always the first sprite in path_list
+            # Check if player has uses remaining
+            if self.pathfinder_uses_remaining > 0:
+                # Clear any existing path first (keep black tile at exit)
                 black_tile = self.path_list[0] if len(self.path_list) > 0 else None
                 self.path_list = arcade.SpriteList()
                 if black_tile:
                     self.path_list.append(black_tile)
-                self.path_visible = False
-            else:
-                # Clear any existing path first
-                black_tile = self.path_list[0] if len(self.path_list) > 0 else None
-                self.path_list = arcade.SpriteList()
-                if black_tile:
-                    self.path_list.append(black_tile)
+                
                 # Show pathfinder path
                 self.pathfinder(self.maze)
-                self.path_visible = True
+                
+                # Consume a use and start timer
+                self.pathfinder_uses_remaining -= 1
+                self.pathfinder_active = True
+                self.pathfinder_timer = 0.0
 
 
         elif key in (arcade.key.UP, arcade.key.W):
@@ -919,6 +937,18 @@ class GameView(arcade.View):
         # Update the elapsed time
         self.elapsed_time += delta_time
 
+        # Update pathfinder timer - auto-hide after duration
+        if self.pathfinder_active:
+            self.pathfinder_timer += delta_time
+            if self.pathfinder_timer >= self.pathfinder_duration:
+                # Time's up - clear the path
+                black_tile = self.path_list[0] if len(self.path_list) > 0 else None
+                self.path_list = arcade.SpriteList()
+                if black_tile:
+                    self.path_list.append(black_tile)
+                self.pathfinder_active = False
+                self.pathfinder_timer = 0.0
+
         # Scroll the screen to the player
         self.scroll_to_player()
 
@@ -947,7 +977,11 @@ class GameView(arcade.View):
         path = astar(maze, start, goal)
         
         if path:
-            for (row, column) in path:
+            # Limit to first N tiles of the path (path is reversed: goal to start)
+            # Use last N elements to get tiles closest to player
+            limited_path = path[-self.pathfinder_max_tiles:] if len(path) > self.pathfinder_max_tiles else path
+            
+            for (row, column) in limited_path:
                 path_sprite = arcade.Sprite(
                     "images/tiles/blank.png",
                     scale=SPRITE_SCALING,
