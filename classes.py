@@ -881,7 +881,7 @@ class GameView(arcade.View):
 
         # Create exit sprite (will be drawn on top of black tile)
         exit_sprite = arcade.Sprite(
-            "images/tiles/signExit.png",
+            "images/tiles/exitSign.png",
             scale=SPRITE_SCALING,
         )
         exit_sprite.center_x = (MAZE_SIZE_SETTING - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
