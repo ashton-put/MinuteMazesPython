@@ -636,7 +636,7 @@ class GameView(arcade.View):
         self.pathfinder_max_uses = 3  # Maximum uses per maze
         self.pathfinder_active = False  # Is path currently shown?
         self.pathfinder_timer = 0.0  # Timer for auto-hide
-        self.pathfinder_duration = 5.0  # How long path stays visible (seconds)
+        self.pathfinder_duration = 3.0  # How long path stays visible (seconds)
         self.pathfinder_max_tiles = 10  # Maximum path tiles to show
 
         # Create the maze using the current size setting

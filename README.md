@@ -35,9 +35,10 @@ python play.py
 - During gameplay:
 
 ```
-WASD / Arrow Keys === Move through maze
-        R         === Reset current maze (elapsed time and current score)
-    ESC / ENTER   === Pause menu
+WASD / Arrow Keys = Move through maze
+        R         = Reset current maze (elapsed time and current score)
+    ESC / ENTER   = Pause menu
+    SPACE BAR     = Pathfinder ability (shows 10 tiles of the shortest path to the exit for 3 seconds, 3 uses per maze)
 ```
 
 
