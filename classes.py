@@ -89,7 +89,7 @@ class MainMenuView(arcade.View):
         # Add instructions at bottom
         menu_box.add(arcade.gui.UISpace(height=40))
         instructions = arcade.gui.UILabel(
-            text="| Use the Arrow Keys or WASD to move | R to restart | ESC or ENTER to pause |",
+            text="| WASD or Arrow Keys to Move | R to Restart | ESC or ENTER to Pause | SPACE for Pathfinder |",
             font_size=14,
             text_color=arcade.color.LIGHT_GRAY
         )
@@ -315,7 +315,7 @@ class InGameMenuView(arcade.View):
         # Add instructions at bottom
         menu_box.add(arcade.gui.UISpace(height=40))
         instructions = arcade.gui.UILabel(
-            text="| Use the Arrow Keys or WASD to move | R to restart | ESC or ENTER to pause |",
+            text="| WASD or Arrow Keys to Move | R to Restart | ESC or ENTER to Pause | SPACE for Pathfinder |",
             font_size=14,
             text_color=arcade.color.LIGHT_GRAY
         )
@@ -854,7 +854,7 @@ class GameView(arcade.View):
             self.restart_maze()
 
         # Pathfinder
-        elif key == arcade.key.P:
+        elif key == arcade.key.SPACE:
             # Check if player has uses remaining
             if self.pathfinder_uses_remaining > 0:
                 # Clear any existing path first (keep black tile at exit)
@@ -963,6 +963,7 @@ class GameView(arcade.View):
             self.camera_sprites.position, position, CAMERA_SPEED
         )
     
+
     # Pathfinder function to draw a path with tiles from the players position to the exit
     # utilizes A* 
     def pathfinder(self, maze):
