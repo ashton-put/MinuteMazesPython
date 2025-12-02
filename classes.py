@@ -19,6 +19,9 @@ from functions import make_maze, astar
 # Global maze size setting (can be changed in settings)
 MAZE_SIZE_SETTING = 51  # Default to large (options: 21, 31, 51)
 
+# Global volume setting (can be changed in settings)
+VOLUME_SETTING = 0.5  # Default to 50% (range: 0.0 to 1.0)
+
 # Main Menu View with GUI widgets
 class MainMenuView(arcade.View):
 
@@ -124,37 +127,42 @@ class SettingsView(arcade.View):
         root = arcade.gui.UIAnchorLayout()
         
         # Create vertical box for menu items
-        menu_box = arcade.gui.UIBoxLayout(vertical=True, space_between=20)
+        menu_box = arcade.gui.UIBoxLayout(vertical=True, space_between=12)
         
         # Add title
         title = arcade.gui.UILabel(
             text="Settings",
-            font_size=50,
+            font_size=42,
             text_color=arcade.color.WHITE,
             bold=True
         )
         menu_box.add(title)
         
-        menu_box.add(arcade.gui.UISpace(height=30))
+        menu_box.add(arcade.gui.UISpace(height=15))
         
         # Add maze size label
         size_label = arcade.gui.UILabel(
             text="Maze Size",
-            font_size=24,
-            text_color=arcade.color.WHITE
+            font_size=20,
+            text_color=arcade.color.WHITE,
+            bold=True
         )
         menu_box.add(size_label)
         
-        menu_box.add(arcade.gui.UISpace(height=10))
+        menu_box.add(arcade.gui.UISpace(height=5))
         
-        # Create size buttons
+        # Create horizontal box for size buttons to save vertical space
+        size_button_box = arcade.gui.UIBoxLayout(vertical=False, space_between=10)
+        # Create horizontal box for size buttons to save vertical space
+        size_button_box = arcade.gui.UIBoxLayout(vertical=False, space_between=10)
+        
         small_button = arcade.gui.UIFlatButton(
-            text="Small (21x21)",
-            width=250,
-            height=50,
+            text="Small",
+            width=75,
+            height=40,
             style=arcade.gui.UIFlatButton.STYLE_BLUE if MAZE_SIZE_SETTING == 21 else None
         )
-        menu_box.add(small_button)
+        size_button_box.add(small_button)
         
         @small_button.event("on_click")
         def on_small_click(_):
@@ -163,12 +171,12 @@ class SettingsView(arcade.View):
             self.window.show_view(SettingsView())  # Refresh view to show updated selection
         
         medium_button = arcade.gui.UIFlatButton(
-            text="Medium (31x31)",
-            width=250,
-            height=50,
+            text="Medium",
+            width=75,
+            height=40,
             style=arcade.gui.UIFlatButton.STYLE_BLUE if MAZE_SIZE_SETTING == 31 else None
         )
-        menu_box.add(medium_button)
+        size_button_box.add(medium_button)
         
         @medium_button.event("on_click")
         def on_medium_click(_):
@@ -177,12 +185,12 @@ class SettingsView(arcade.View):
             self.window.show_view(SettingsView())  # Refresh view to show updated selection
         
         large_button = arcade.gui.UIFlatButton(
-            text="Large (51x51)",
-            width=250,
-            height=50,
+            text="Large",
+            width=75,
+            height=40,
             style=arcade.gui.UIFlatButton.STYLE_BLUE if MAZE_SIZE_SETTING == 51 else None
         )
-        menu_box.add(large_button)
+        size_button_box.add(large_button)
         
         @large_button.event("on_click")
         def on_large_click(_):
@@ -190,13 +198,59 @@ class SettingsView(arcade.View):
             MAZE_SIZE_SETTING = 51
             self.window.show_view(SettingsView())  # Refresh view to show updated selection
         
-        menu_box.add(arcade.gui.UISpace(height=30))
+        menu_box.add(size_button_box)
+        
+        menu_box.add(arcade.gui.UISpace(height=15))
+        
+        # Volume section - combine label and percentage
+        volume_header_box = arcade.gui.UIBoxLayout(vertical=False, space_between=10)
+        
+        volume_label = arcade.gui.UILabel(
+            text="Sound Volume:",
+            font_size=20,
+            text_color=arcade.color.WHITE,
+            bold=True
+        )
+        volume_header_box.add(volume_label)
+        
+        # Volume percentage display
+        volume_percent = int(VOLUME_SETTING * 100)
+        volume_display = arcade.gui.UILabel(
+            text=f"{volume_percent}%",
+            font_size=20,
+            text_color=arcade.color.YELLOW,
+            bold=True
+        )
+        volume_header_box.add(volume_display)
+        
+        menu_box.add(volume_header_box)
+        
+        menu_box.add(arcade.gui.UISpace(height=5))
+        
+        # Volume slider
+        volume_slider = arcade.gui.UISlider(
+            value=VOLUME_SETTING * 100,  # Convert to 0-100 range
+            min_value=0,
+            max_value=100,
+            width=250,
+            height=20
+        )
+        menu_box.add(volume_slider)
+        
+        @volume_slider.event("on_change")
+        def on_slider_change(event):
+            global VOLUME_SETTING
+            VOLUME_SETTING = event.new_value / 100.0  # Convert back to 0.0-1.0
+            # Update the volume display label
+            volume_display.text = f"{int(event.new_value)}%"
+        
+        menu_box.add(arcade.gui.UISpace(height=15))
         
         # Back to main menu button
         back_button = arcade.gui.UIFlatButton(
             text="Back to Main Menu",
             width=250,
-            height=50,
+            height=45,
             style=arcade.gui.UIFlatButton.STYLE_RED
         )
         menu_box.add(back_button)
@@ -631,6 +685,11 @@ class GameView(arcade.View):
 
         self.score = 0
 
+        # Sound effects
+        self.coin_sound = arcade.Sound("sounds/collect.wav")
+        self.pathfinder_sound = arcade.Sound("sounds/pathfinder.wav")
+        self.exit_sound = arcade.Sound("sounds/exit.wav")
+
         # Pathfinder power variables
         self.pathfinder_uses_remaining = 3  # Uses available
         self.pathfinder_max_uses = 3  # Maximum uses per maze
@@ -870,6 +929,7 @@ class GameView(arcade.View):
                 self.pathfinder_uses_remaining -= 1
                 self.pathfinder_active = True
                 self.pathfinder_timer = 0.0
+                self.pathfinder_sound.play(volume=0.3 * VOLUME_SETTING, pan=0.0)
 
 
         elif key in (arcade.key.UP, arcade.key.W):
@@ -915,6 +975,7 @@ class GameView(arcade.View):
                 coin.visible = False
                 self.score += 1
                 self.grand_total_score += 1
+                self.coin_sound.play(volume=0.5 * VOLUME_SETTING)
 
         # Check if player reached the exit (player must be fully on the exit tile)
         exit_sprite = self.exit_list[0]
@@ -930,6 +991,7 @@ class GameView(arcade.View):
             self.player_sprite.center_x < exit_tile_right and
             self.player_sprite.center_y > exit_tile_bottom and 
             self.player_sprite.center_y < exit_tile_top):
+            self.exit_sound.play(volume=0.6 * VOLUME_SETTING)
             # Show congratulations view
             congratulations_view = CongratulationsView(self)
             self.window.show_view(congratulations_view)
