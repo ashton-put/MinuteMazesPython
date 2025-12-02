@@ -595,6 +595,15 @@ class GameView(arcade.View):
         self.up_pressed = False
         self.down_pressed = False
         
+        # Clear pathfinder visualization
+        if hasattr(self, 'path_visible'):
+            if self.path_visible:
+                black_tile = self.path_list[0] if len(self.path_list) > 0 else None
+                self.path_list = arcade.SpriteList()
+                if black_tile:
+                    self.path_list.append(black_tile)
+                self.path_visible = False
+        
         # Reset camera to player
         self.camera_sprites.position = (self.player_sprite.center_x, self.player_sprite.center_y)
 
@@ -614,6 +623,8 @@ class GameView(arcade.View):
 
         # Create the maze using the current size setting
         maze = make_maze(MAZE_SIZE_SETTING, MAZE_SIZE_SETTING)
+        self.maze = maze  # Store maze for pathfinding
+        self.path_visible = False  # Track if pathfinder path is shown
 
         # Create sprites based on 2D grid
         if not MERGE_SPRITES:
@@ -730,26 +741,6 @@ class GameView(arcade.View):
         # Set the background color
         self.background_color = arcade.color.TEAL
 
-        # # Find path from player to exit
-        # start = (1, 1)
-        # goal = (MAZE_SIZE_SETTING - 2, MAZE_SIZE_SETTING - 2)
-        # path = astar(maze, start, goal)
-
-        # # Draw the path
-        # if path:
-        #     for (row, column) in path:
-        #         path_sprite = arcade.Sprite(
-        #             "images/tiles/blank.png",
-        #             scale=SPRITE_SCALING,
-        #         )
-        #         path_sprite.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
-        #         path_sprite.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
-
-        #         # SET PATH COLOR
-        #         path_sprite.color = arcade.color.RED
-
-        #         self.path_list.append(path_sprite)  # Add path sprites to path_list
-
         # Randomly place coins in the maze
         # Only place on verified empty tiles, and avoid player/exit positions
         player_pos = (1, 1)
@@ -840,6 +831,29 @@ class GameView(arcade.View):
         elif key == arcade.key.R:
             # Restart current maze (preserves maze layout)
             self.restart_maze()
+
+        # Pathfinder
+        elif key == arcade.key.P:
+            # Toggle pathfinder visualization
+            if self.path_visible:
+                # Clear path sprites (keep only the black tile at exit)
+                # The black tile is always the first sprite in path_list
+                black_tile = self.path_list[0] if len(self.path_list) > 0 else None
+                self.path_list = arcade.SpriteList()
+                if black_tile:
+                    self.path_list.append(black_tile)
+                self.path_visible = False
+            else:
+                # Clear any existing path first
+                black_tile = self.path_list[0] if len(self.path_list) > 0 else None
+                self.path_list = arcade.SpriteList()
+                if black_tile:
+                    self.path_list.append(black_tile)
+                # Show pathfinder path
+                self.pathfinder(self.maze)
+                self.path_visible = True
+
+
         elif key in (arcade.key.UP, arcade.key.W):
             self.up_pressed = True
             self.update_player_speed()
@@ -918,3 +932,31 @@ class GameView(arcade.View):
         self.camera_sprites.position = arcade.math.lerp_2d(
             self.camera_sprites.position, position, CAMERA_SPEED
         )
+    
+    # Pathfinder function to draw a path with tiles from the players position to the exit
+    # utilizes A* 
+    def pathfinder(self, maze):
+        # Convert player position from pixels to grid coordinates
+        player_grid_x = int(self.player_sprite.center_x / SPRITE_SIZE)
+        player_grid_y = int(self.player_sprite.center_y / SPRITE_SIZE)
+        
+        # A* expects (row, column) which is (y, x)
+        start = (player_grid_y, player_grid_x)
+        goal = (MAZE_SIZE_SETTING - 2, MAZE_SIZE_SETTING - 2)
+        
+        path = astar(maze, start, goal)
+        
+        if path:
+            for (row, column) in path:
+                path_sprite = arcade.Sprite(
+                    "images/tiles/blank.png",
+                    scale=SPRITE_SCALING,
+                )
+                # Convert grid coordinates back to pixel coordinates
+                path_sprite.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
+                path_sprite.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
+                
+                # SET PATH COLOR
+                path_sprite.color = arcade.color.RED
+                
+                self.path_list.append(path_sprite)
