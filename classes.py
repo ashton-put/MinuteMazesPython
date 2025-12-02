@@ -7,8 +7,6 @@ from constants import (
     SPRITE_SCALING,
     SPRITE_SIZE,
     WINDOW_HEIGHT,
-    MAZE_WIDTH,
-    MAZE_HEIGHT,
     TILE_EMPTY,
     TILE_CRATE,
     MERGE_SPRITES,
@@ -21,9 +19,102 @@ from functions import make_maze, astar
 # Global maze size setting (can be changed in settings)
 MAZE_SIZE_SETTING = 51  # Default to large (options: 21, 31, 51)
 
+# Main Menu View with GUI widgets
+class MainMenuView(arcade.View):
 
+    def __init__(self):
+        super().__init__()
+        self.ui = arcade.gui.UIManager()
+        
+        # Create main layout
+        root = arcade.gui.UIAnchorLayout()
+        
+        # Create vertical box for menu items
+        menu_box = arcade.gui.UIBoxLayout(vertical=True, space_between=20)
+        
+        # Add title
+        title = arcade.gui.UILabel(
+            text="Minute Mazes",
+            font_size=50,
+            text_color=arcade.color.WHITE,
+            bold=True
+        )
+        menu_box.add(title)
+        
+        # Add some space after title
+        menu_box.add(arcade.gui.UISpace(height=30))
+        
+        # Create start button
+        start_button = arcade.gui.UIFlatButton(
+            text="Start Game",
+            width=250,
+            height=50,
+            style=arcade.gui.UIFlatButton.STYLE_BLUE
+        )
+        menu_box.add(start_button)
+        
+        @start_button.event("on_click")
+        def on_start_click(_):
+            game_view = GameView()
+            game_view.setup()
+            self.window.show_view(game_view)
+        
+        # Create settings button
+        settings_button = arcade.gui.UIFlatButton(
+            text="Settings",
+            width=250,
+            height=50,
+            style=arcade.gui.UIFlatButton.STYLE_BLUE
+        )
+        menu_box.add(settings_button)
+        
+        @settings_button.event("on_click")
+        def on_settings_click(_):
+            settings_view = SettingsView()
+            self.window.show_view(settings_view)
+        
+        # Create quit button
+        quit_button = arcade.gui.UIFlatButton(
+            text="Quit",
+            width=250,
+            height=50,
+            style=arcade.gui.UIFlatButton.STYLE_RED
+        )
+        menu_box.add(quit_button)
+        
+        @quit_button.event("on_click")
+        def on_quit_click(_):
+            arcade.close_window()
+        
+        # Add instructions at bottom
+        menu_box.add(arcade.gui.UISpace(height=40))
+        instructions = arcade.gui.UILabel(
+            text="| Use the Arrow Keys or WASD to move | R to restart | ESC or ENTER to pause |",
+            font_size=14,
+            text_color=arcade.color.LIGHT_GRAY
+        )
+        menu_box.add(instructions)
+        
+        # Center the menu
+        root.add(menu_box, anchor_x="center", anchor_y="center")
+        self.ui.add(root)
+
+    def on_show_view(self):
+        """ This is run once when we switch to this view """
+        arcade.set_background_color(arcade.color.DARK_BLUE)
+        self.ui.enable()
+
+    def on_hide_view(self):
+        """ Disable UI when leaving view """
+        self.ui.disable()
+
+    def on_draw(self):
+        """ Render the screen. """
+        self.clear()
+        self.ui.draw()
+
+# Settings Menu View with maze size options
 class SettingsView(arcade.View):
-    """ Settings Menu View with maze size options """
 
     def __init__(self):
         super().__init__()
@@ -133,102 +224,8 @@ class SettingsView(arcade.View):
         self.clear()
         self.ui.draw()
 
-class MainMenuView(arcade.View):
-    """ Main Menu View with GUI widgets """
-
-    def __init__(self):
-        super().__init__()
-        self.ui = arcade.gui.UIManager()
-        
-        # Create main layout
-        root = arcade.gui.UIAnchorLayout()
-        
-        # Create vertical box for menu items
-        menu_box = arcade.gui.UIBoxLayout(vertical=True, space_between=20)
-        
-        # Add title
-        title = arcade.gui.UILabel(
-            text="Minute Mazes",
-            font_size=50,
-            text_color=arcade.color.WHITE,
-            bold=True
-        )
-        menu_box.add(title)
-        
-        # Add some space after title
-        menu_box.add(arcade.gui.UISpace(height=30))
-        
-        # Create start button
-        start_button = arcade.gui.UIFlatButton(
-            text="Start Game",
-            width=250,
-            height=50,
-            style=arcade.gui.UIFlatButton.STYLE_BLUE
-        )
-        menu_box.add(start_button)
-        
-        @start_button.event("on_click")
-        def on_start_click(_):
-            game_view = GameView()
-            game_view.setup()
-            self.window.show_view(game_view)
-        
-        # Create settings button
-        settings_button = arcade.gui.UIFlatButton(
-            text="Settings",
-            width=250,
-            height=50,
-            style=arcade.gui.UIFlatButton.STYLE_BLUE
-        )
-        menu_box.add(settings_button)
-        
-        @settings_button.event("on_click")
-        def on_settings_click(_):
-            settings_view = SettingsView()
-            self.window.show_view(settings_view)
-        
-        # Create quit button
-        quit_button = arcade.gui.UIFlatButton(
-            text="Quit",
-            width=250,
-            height=50,
-            style=arcade.gui.UIFlatButton.STYLE_RED
-        )
-        menu_box.add(quit_button)
-        
-        @quit_button.event("on_click")
-        def on_quit_click(_):
-            arcade.close_window()
-        
-        # Add instructions at bottom
-        menu_box.add(arcade.gui.UISpace(height=40))
-        instructions = arcade.gui.UILabel(
-            text="Use Arrow Keys or WASD to move | R to restart",
-            font_size=14,
-            text_color=arcade.color.LIGHT_GRAY
-        )
-        menu_box.add(instructions)
-        
-        # Center the menu
-        root.add(menu_box, anchor_x="center", anchor_y="center")
-        self.ui.add(root)
-
-    def on_show_view(self):
-        """ This is run once when we switch to this view """
-        arcade.set_background_color(arcade.color.DARK_BLUE)
-        self.ui.enable()
-
-    def on_hide_view(self):
-        """ Disable UI when leaving view """
-        self.ui.disable()
-
-    def on_draw(self):
-        """ Render the screen. """
-        self.clear()
-        self.ui.draw()
-
+# In-Game Pause Menu with GUI widgets
 class InGameMenuView(arcade.View):
-    """ In-Game Pause Menu with GUI widgets """
 
     def __init__(self, game_view):
         super().__init__()
@@ -306,6 +303,15 @@ class InGameMenuView(arcade.View):
         def on_quit_click(_):
             arcade.close_window()
         
+        # Add instructions at bottom
+        menu_box.add(arcade.gui.UISpace(height=40))
+        instructions = arcade.gui.UILabel(
+            text="| Use the Arrow Keys or WASD to move | R to restart | ESC or ENTER to pause |",
+            font_size=14,
+            text_color=arcade.color.LIGHT_GRAY
+        )
+        menu_box.add(instructions)
+        
         # Center the menu
         root.add(menu_box, anchor_x="center", anchor_y="center")
         self.ui.add(root)
@@ -335,8 +341,8 @@ class InGameMenuView(arcade.View):
         # Draw the UI on top
         self.ui.draw()
 
+# Congratulations View with GUI widgets
 class CongratulationsView(arcade.View):
-    """ Congratulations View with GUI widgets """
 
     def __init__(self, game_view):
         super().__init__()
@@ -503,12 +509,8 @@ class CongratulationsView(arcade.View):
 
 # Main application class
 class GameView(arcade.View):
-    """ Main application class. """
 
     def __init__(self):
-        """
-        Initializer
-        """
         super().__init__()
 
         # Sprite lists
@@ -556,13 +558,10 @@ class GameView(arcade.View):
         self.initial_player_y = SPRITE_SIZE + SPRITE_SIZE / 2
 
 
+    # Restart the current maze without regenerating it
+    # deduct_score: If True, deduct collected coins from grand total (for mid-game restart).
+                  # If False, keep grand total intact (for replay after completion).
     def restart_maze(self, deduct_score=True):
-        """ Restart the current maze without regenerating it 
-        
-        Args:
-            deduct_score: If True, deduct collected coins from grand total (for mid-game restart).
-                         If False, keep grand total intact (for replay after completion).
-        """
         # Deduct collected coins from grand total only if mid-game restart
         if deduct_score:
             self.grand_total_score -= self.score
@@ -592,9 +591,9 @@ class GameView(arcade.View):
         # Reset camera to player
         self.camera_sprites.position = (self.player_sprite.center_x, self.player_sprite.center_y)
 
+
     # Set up the game and initialize the variables
     def setup(self):
-        """ Set up the game and initialize the variables. """
 
         # Sprite lists
         self.player_list = arcade.SpriteList()
@@ -605,8 +604,6 @@ class GameView(arcade.View):
         self.exit_list = arcade.SpriteList() 
 
         self.score = 0
-        # Don't reset elapsed_time here - it's reset in CongratulationsView
-        # Don't reset completed_mazes - we want to keep the count
 
         # Create the maze using the current size setting
         maze = make_maze(MAZE_SIZE_SETTING, MAZE_SIZE_SETTING)
@@ -651,21 +648,27 @@ class GameView(arcade.View):
                     wall.center_x = column_mid * SPRITE_SIZE + SPRITE_SIZE / 2
                     wall.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
                     wall.width = SPRITE_SIZE * column_count
+
+                    # SET MAZE WALL COLOR
+                    wall.color = arcade.color.DODGER_BLUE
+
                     self.wall_list.append(wall)
 
-        # Create individual wall tiles instead of merged sprites for better texture quality
-        for row in range(MAZE_SIZE_SETTING):
-            for column in range(MAZE_SIZE_SETTING):
-                if maze[row][column] == TILE_CRATE:
-                    wall = arcade.Sprite(
-                        "images/tiles/blank.png",
-                        scale=SPRITE_SCALING,
-                    )
-                    wall.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
-                    wall.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
-                    # SET MAZE WALL COLOR
-                    wall.color = arcade.color.LIGHT_SLATE_GRAY
-                    self.wall_list.append(wall)
+        # # Create individual wall tiles instead of merged sprites for better texture quality
+        # for row in range(MAZE_SIZE_SETTING):
+        #     for column in range(MAZE_SIZE_SETTING):
+        #         if maze[row][column] == TILE_CRATE:
+        #             wall = arcade.Sprite(
+        #                 "images/tiles/blank.png",
+        #                 scale=SPRITE_SCALING,
+        #             )
+        #             wall.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
+        #             wall.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
+                    
+        #             # SET MAZE WALL COLOR
+        #             wall.color = arcade.color.DODGER_BLUE
+                    
+        #             self.wall_list.append(wall)
 
         # Create floor tiles for all empty (walkable) spaces in the maze
         for row in range(MAZE_SIZE_SETTING):
@@ -677,13 +680,16 @@ class GameView(arcade.View):
                     )
                     floor.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
                     floor.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
+                    
                     # SET MAZE FLOOR COLOR
-                    floor.color = arcade.color.LIGHT_STEEL_BLUE
+                    floor.color = arcade.color.DEEP_SKY_BLUE
+                    
                     self.floor_list.append(floor)
 
         # Set up the player with left-facing texture
         self.player_sprite = arcade.Sprite(
             scale=SPRITE_SCALING)
+        
         # Set up both textures - left at index 0, right at index 1
         self.player_sprite.textures = [self.mouse_texture_left, self.mouse_texture_right]
         self.player_sprite.texture = self.mouse_texture_left
@@ -714,7 +720,7 @@ class GameView(arcade.View):
 
         self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.wall_list)
 
-        # Set the background color AMAZON
+        # Set the background color
         self.background_color = arcade.color.TEAL
 
         # Randomly place coins in the maze
@@ -730,7 +736,7 @@ class GameView(arcade.View):
                     (row, column) != exit_pos and 
                     random.random() < 0.08):  # 8% chance to place a coin
                     coin = arcade.Sprite(
-                        "images/items/coinGold.png",
+                        "images/items/cheese.png",
                         scale=SPRITE_SCALING,
                     )
                     coin.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
@@ -740,9 +746,6 @@ class GameView(arcade.View):
 
     # Render the screen
     def on_draw(self):
-        """
-        Render the screen.
-        """
 
         # This command has to happen before we start drawing
         self.clear()
@@ -762,10 +765,10 @@ class GameView(arcade.View):
         self.camera_gui.use()
 
         # Draw the HUD (score, time, completed mazes, grand total)
-        output = f"Total Coins: {self.grand_total_score}"
+        output = f"Total Cheese: {self.grand_total_score}"
         arcade.draw_text(output, 20, WINDOW_HEIGHT - 20, arcade.color.YELLOW, 16)
 
-        output = f"Coins: {self.score}"
+        output = f"Cheese: {self.score}"
         arcade.draw_text(output, 20, WINDOW_HEIGHT - 40, arcade.color.WHITE, 16)
 
         output = f"Time: {self.elapsed_time:.1f}"
@@ -775,8 +778,8 @@ class GameView(arcade.View):
         arcade.draw_text(output, 20, WINDOW_HEIGHT - 80, arcade.color.WHITE, 16)
 
 
+    # Calculate speed based on the keys pressed
     def update_player_speed(self):
-        """ Calculate speed based on the keys pressed """
         self.player_sprite.change_x = 0
         self.player_sprite.change_y = 0
 
@@ -804,7 +807,6 @@ class GameView(arcade.View):
 
     # Called whenever a key is pressed
     def on_key_press(self, key, modifiers):
-        """Called whenever a key is pressed. """
         if key in (arcade.key.ENTER, arcade.key.ESCAPE):
             in_game_menu_view = InGameMenuView(self)
             self.window.show_view(in_game_menu_view)
@@ -825,9 +827,8 @@ class GameView(arcade.View):
             self.update_player_speed()
 
 
-    # Called when the user releases a key
+    # Called when the user releases a key (important for movement)
     def on_key_release(self, key, modifiers):
-        """Called when the user releases a key. """
         if key in (arcade.key.UP, arcade.key.W):
             self.up_pressed = False
             self.update_player_speed()
@@ -844,10 +845,8 @@ class GameView(arcade.View):
 
     # Movement and game logic
     def on_update(self, delta_time):
-        """ Movement and game logic """
 
-        # Call update on all sprites (The sprites don't do much in this
-        # example though)
+        # Call update on all sprites
         self.physics_engine.update()
 
         # Check for collisions between the player and coins
@@ -860,6 +859,7 @@ class GameView(arcade.View):
 
         # Check if player reached the exit (player must be fully on the exit tile)
         exit_sprite = self.exit_list[0]
+        
         # Check if player center is within the exit tile boundaries
         exit_tile_left = exit_sprite.center_x - SPRITE_SIZE / 2
         exit_tile_right = exit_sprite.center_x + SPRITE_SIZE / 2
@@ -882,14 +882,11 @@ class GameView(arcade.View):
         self.scroll_to_player()
 
 
+    #  Scroll the window to the player.
+        # if CAMERA_SPEED is 1, the camera will immediately move to the desired
+        # position. Anything between 0 and 1 will have the camera move to the
+        # location with a smoother pan.
     def scroll_to_player(self):
-        """
-        Scroll the window to the player.
-
-        if CAMERA_SPEED is 1, the camera will immediately move to the desired
-        position. Anything between 0 and 1 will have the camera move to the
-        location with a smoother pan.
-        """
         position = (self.player_sprite.center_x, self.player_sprite.center_y)
         self.camera_sprites.position = arcade.math.lerp_2d(
             self.camera_sprites.position, position, CAMERA_SPEED

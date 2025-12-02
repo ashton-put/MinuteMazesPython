@@ -6,7 +6,6 @@ from constants import TILE_EMPTY, TILE_CRATE
 
 # Create a grid with empty cells on odd row/column combinations
 def _create_grid_with_cells(width, height):
-    """ Create a grid with empty cells on odd row/column combinations. """
     grid = []
     for row in range(height):
         grid.append([])

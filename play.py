@@ -5,7 +5,6 @@ from constants import WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE
 from classes import MainMenuView
 
 def main():
-    """ Main function """
     # Create a window class. This is what actually shows up on screen
     window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
 
