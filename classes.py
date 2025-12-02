@@ -133,7 +133,6 @@ class SettingsView(arcade.View):
         self.clear()
         self.ui.draw()
 
-
 class MainMenuView(arcade.View):
     """ Main Menu View with GUI widgets """
 
@@ -540,7 +539,7 @@ class GameView(arcade.View):
         self.camera_gui = arcade.Camera2D()
         
         # Load textures for left and right facing mouse
-        self.mouse_texture_left = arcade.load_texture(":resources:images/enemies/mouse.png")
+        self.mouse_texture_left = arcade.load_texture("images/sprites/mouse.png")
         self.mouse_texture_right = self.mouse_texture_left.flip_left_right()
 
         # Elapsed time
@@ -555,6 +554,7 @@ class GameView(arcade.View):
         # Store initial player position for restart
         self.initial_player_x = SPRITE_SIZE + SPRITE_SIZE / 2
         self.initial_player_y = SPRITE_SIZE + SPRITE_SIZE / 2
+
 
     def restart_maze(self, deduct_score=True):
         """ Restart the current maze without regenerating it 
@@ -619,7 +619,7 @@ class GameView(arcade.View):
                 for column in range(MAZE_SIZE_SETTING):
                     if maze[row][column] == TILE_CRATE:
                         wall = arcade.Sprite(
-                            ":resources:images/tiles/grassCenter.png",
+                            "images/tiles/blank.png",
                             scale=SPRITE_SCALING,
                         )
                         wall.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
@@ -645,7 +645,7 @@ class GameView(arcade.View):
                     
                     # Set wall sprite
                     wall = arcade.Sprite(
-                        ":resources:images/tiles/stoneCenter.png",
+                        "images/tiles/blank.png",
                         scale=SPRITE_SCALING,
                     )
                     wall.center_x = column_mid * SPRITE_SIZE + SPRITE_SIZE / 2
@@ -658,11 +658,13 @@ class GameView(arcade.View):
             for column in range(MAZE_SIZE_SETTING):
                 if maze[row][column] == TILE_CRATE:
                     wall = arcade.Sprite(
-                        ":resources:images/tiles/stoneCenter.png",
+                        "images/tiles/blank.png",
                         scale=SPRITE_SCALING,
                     )
                     wall.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
                     wall.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
+                    # SET MAZE WALL COLOR
+                    wall.color = arcade.color.LIGHT_SLATE_GRAY
                     self.wall_list.append(wall)
 
         # Create floor tiles for all empty (walkable) spaces in the maze
@@ -670,13 +672,13 @@ class GameView(arcade.View):
             for column in range(MAZE_SIZE_SETTING):
                 if maze[row][column] == TILE_EMPTY:
                     floor = arcade.Sprite(
-                        ":resources:images/tiles/grassCenter.png",
+                        "images/tiles/blank.png",
                         scale=SPRITE_SCALING,
                     )
                     floor.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
                     floor.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
-                    # Make floor tiles a tan/beige color to distinguish from background
-                    floor.color = arcade.color.TAN
+                    # SET MAZE FLOOR COLOR
+                    floor.color = arcade.color.LIGHT_STEEL_BLUE
                     self.floor_list.append(floor)
 
         # Set up the player with left-facing texture
@@ -693,7 +695,7 @@ class GameView(arcade.View):
 
         # Create black tile at exit position (will be drawn under the exit sign)
         black_tile = arcade.Sprite(
-            ":resources:images/tiles/boxCrate_double.png",
+            "images/tiles/blank.png",
             scale=SPRITE_SCALING,
         )
         black_tile.center_x = (MAZE_SIZE_SETTING - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
@@ -703,7 +705,7 @@ class GameView(arcade.View):
 
         # Create exit sprite (will be drawn on top of black tile)
         exit_sprite = arcade.Sprite(
-            ":resources:images/tiles/signExit.png",
+            "images/tiles/signExit.png",
             scale=SPRITE_SCALING,
         )
         exit_sprite.center_x = (MAZE_SIZE_SETTING - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
@@ -712,8 +714,8 @@ class GameView(arcade.View):
 
         self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.wall_list)
 
-        # Set the background color
-        self.background_color = arcade.color.AMAZON
+        # Set the background color AMAZON
+        self.background_color = arcade.color.TEAL
 
         # Randomly place coins in the maze
         # Only place on verified empty tiles, and avoid player/exit positions
@@ -728,7 +730,7 @@ class GameView(arcade.View):
                     (row, column) != exit_pos and 
                     random.random() < 0.08):  # 8% chance to place a coin
                     coin = arcade.Sprite(
-                        ":resources:images/items/coinGold.png",
+                        "images/items/coinGold.png",
                         scale=SPRITE_SCALING,
                     )
                     coin.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
@@ -798,6 +800,7 @@ class GameView(arcade.View):
             self.player_sprite.texture = self.player_sprite.textures[0]  # Face left
         elif self.player_sprite.change_x > 0:
             self.player_sprite.texture = self.player_sprite.textures[1]  # Face right
+
 
     # Called whenever a key is pressed
     def on_key_press(self, key, modifiers):

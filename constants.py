@@ -11,7 +11,7 @@ WINDOW_HEIGHT = 700
 WINDOW_TITLE = "MINUTE MAZES"
 
 # Set movement speed
-MOVEMENT_SPEED = 6
+MOVEMENT_SPEED = 5
 
 # Set camera speed
 CAMERA_SPEED = 0.2
