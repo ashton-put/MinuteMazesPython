@@ -509,7 +509,7 @@ class CongratulationsView(arcade.View):
         content_box.add(arcade.gui.UISpace(height=30))
 
         # Add score label
-        score_text = f"Score: {self.game_view.score:.1f}"
+        score_text = f"Score: {self.game_view.score}"
         score_label = arcade.gui.UILabel(
             text=score_text,
             font_size=15,
@@ -518,7 +518,7 @@ class CongratulationsView(arcade.View):
         content_box.add(score_label)
 
         # Add total score label
-        grand_total_score_text = f"Total Score: {self.game_view.grand_total_score:.1f}"
+        grand_total_score_text = f"Total Score: {self.game_view.grand_total_score}"
         grand_total_score_label = arcade.gui.UILabel(
             text=grand_total_score_text,
             font_size=15,
@@ -527,7 +527,7 @@ class CongratulationsView(arcade.View):
         content_box.add(grand_total_score_label)
         
         # Add time label
-        time_text = f"Time: {self.game_view.elapsed_time:.1f} seconds"
+        time_text = f"Time: {self.game_view.elapsed_time:.3f} s"
         time_label = arcade.gui.UILabel(
             text=time_text,
             font_size=15,
@@ -539,13 +539,13 @@ class CongratulationsView(arcade.View):
         if self.game_view.best_time is not None:
             if (self.game_view.elapsed_time < self.game_view.best_time):
                 best_time_label = arcade.gui.UILabel(
-                text=f"Best Time: {self.game_view.elapsed_time:.1f} seconds",
+                text=f"Best Time: {self.game_view.elapsed_time:.3f} s",
                 font_size=15,
                 text_color=arcade.color.YELLOW
             )
             else:
                 best_time_label = arcade.gui.UILabel(
-                text=f"Best Time: {self.game_view.best_time:.1f} seconds",
+                text=f"Best Time: {self.game_view.best_time:.3f} s",
                 font_size=15,
                 text_color=arcade.color.YELLOW
             )
@@ -941,7 +941,7 @@ class GameView(arcade.View):
         output = f"Cheese: {self.score}"
         arcade.draw_text(output, 20, WINDOW_HEIGHT - 40, arcade.color.WHITE, 16)
 
-        output = f"Time: {self.elapsed_time:.1f}"
+        output = f"Time: {self.elapsed_time:.3f} s"
         arcade.draw_text(output, 20, WINDOW_HEIGHT - 60, arcade.color.WHITE, 16)
 
         output = f"Completed: {self.completed_mazes}"
