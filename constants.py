@@ -27,13 +27,20 @@ CONGRATULATIONS_DELAY = 10.0
 TILE_EMPTY = 0
 TILE_CRATE = 1
 
-# Maze must have an ODD number of rows and columns
-# Walls go on EVEN rows/columns.
-# Openings go on ODD rows/columns
-MAZE_HEIGHT = 51
-MAZE_WIDTH = 51
-
 # Merge sprites = True
 # If True, we merge sprites into one sprite, with a repeating texture for each cell
 # This reduces our sprite count
 MERGE_SPRITES = True
+
+# Pathfinder constants
+PATHFINDER_MAX_USES = 3
+PATHFINDER_DURATION = 3.0
+PATHFINDER_MAX_TILES = 10
+
+# Story mode configuration
+STORY_MODE_MAZE_SEQUENCE = [
+    21, 21, 21,  # 3 small mazes
+    31, 31, 31, 31,  # 4 medium mazes
+    51, 51, 51  # 3 large mazes
+]
+STORY_MODE_TOTAL_MAZES = 10

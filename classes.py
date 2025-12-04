@@ -1,6 +1,7 @@
 # CLASSES
 
 import random
+from enum import Enum
 import arcade
 import arcade.gui
 from constants import (
@@ -12,7 +13,12 @@ from constants import (
     MERGE_SPRITES,
     MOVEMENT_SPEED,
     CAMERA_SPEED,
-    CONGRATULATIONS_DELAY
+    CONGRATULATIONS_DELAY,
+    STORY_MODE_MAZE_SEQUENCE,
+    STORY_MODE_TOTAL_MAZES,
+    PATHFINDER_DURATION,
+    PATHFINDER_MAX_TILES,
+    PATHFINDER_MAX_USES
 )
 from functions import make_maze, astar
 
@@ -24,6 +30,10 @@ MOUSE_COLOR_SETTING = "white"  # Default to white (options: "white", "grey", "br
 
 # Global volume setting (can be changed in settings)
 VOLUME_SETTING = 0.5  # Default to 50% (range: 0.0 to 1.0)
+
+class GameMode(Enum):
+    STORY_MODE = "story_mode"
+    FREE_PLAY = "free_play"
 
 # Main Menu View with GUI widgets
 class MainMenuView(arcade.View):
@@ -49,19 +59,34 @@ class MainMenuView(arcade.View):
         
         # Add some space after title
         menu_box.add(arcade.gui.UISpace(height=30))
-        
-        # Create start button
-        start_button = arcade.gui.UIFlatButton(
-            text="Start Game",
+
+        # Create Story Mode button
+        story_mode_button = arcade.gui.UIFlatButton(
+            text="Story Mode",
             width=250,
             height=50,
             style=arcade.gui.UIFlatButton.STYLE_BLUE
         )
-        menu_box.add(start_button)
+        menu_box.add(story_mode_button)
         
-        @start_button.event("on_click")
-        def on_start_click(_):
-            game_view = GameView()
+        @story_mode_button.event("on_click")
+        def on_story_mode_click(_):
+            # Show mouse color selection screen for story mode
+            mouse_selection_view = MouseSelectionView()
+            self.window.show_view(mouse_selection_view)
+        
+        # Create Free Play button
+        free_play_button = arcade.gui.UIFlatButton(
+            text="Free Play",
+            width=250,
+            height=50,
+            style=arcade.gui.UIFlatButton.STYLE_BLUE
+        )
+        menu_box.add(free_play_button)
+        
+        @free_play_button.event("on_click")
+        def on_free_play_click(_):
+            game_view = GameView(game_mode=GameMode.FREE_PLAY)
             game_view.setup()
             self.window.show_view(game_view)
         
@@ -119,12 +144,129 @@ class MainMenuView(arcade.View):
         self.clear()
         self.ui.draw()
 
+# For selecting mouse color at the start of story mode
+class MouseSelectionView(arcade.View):
+
+    def __init__(self):
+        super().__init__()
+        self.ui = arcade.gui.UIManager()
+        
+        # Create main layout
+        root = arcade.gui.UIAnchorLayout()
+        
+        # Create vertical box for menu items
+        menu_box = arcade.gui.UIBoxLayout(vertical=True, space_between=20)
+        
+        # Add title
+        title = arcade.gui.UILabel(
+            text="Choose Your Mouse",
+            font_size=42,
+            text_color=arcade.color.WHITE,
+            bold=True
+        )
+        menu_box.add(title)
+        
+        # Add subtitle
+        subtitle = arcade.gui.UILabel(
+            text="Your choice is locked for Story Mode",
+            font_size=18,
+            text_color=arcade.color.LIGHT_GRAY
+        )
+        menu_box.add(subtitle)
+        
+        menu_box.add(arcade.gui.UISpace(height=20))
+        
+        # Create horizontal box for mouse color buttons
+        mouse_button_box = arcade.gui.UIBoxLayout(vertical=False, space_between=20)
+        
+        # White mouse button
+        white_button = arcade.gui.UIFlatButton(
+            text="White Mouse",
+            width=150,
+            height=50,
+            style=arcade.gui.UIFlatButton.STYLE_BLUE
+        )
+        mouse_button_box.add(white_button)
+        
+        @white_button.event("on_click")
+        def on_white_click(_):
+            game_view = GameView(game_mode=GameMode.STORY_MODE, story_mouse_color="white")
+            game_view.setup()
+            self.window.show_view(game_view)
+        
+        # Grey mouse button
+        grey_button = arcade.gui.UIFlatButton(
+            text="Grey Mouse",
+            width=150,
+            height=50,
+            style=arcade.gui.UIFlatButton.STYLE_BLUE
+        )
+        mouse_button_box.add(grey_button)
+        
+        @grey_button.event("on_click")
+        def on_grey_click(_):
+            game_view = GameView(game_mode=GameMode.STORY_MODE, story_mouse_color="grey")
+            game_view.setup()
+            self.window.show_view(game_view)
+        
+        # Brown mouse button
+        brown_button = arcade.gui.UIFlatButton(
+            text="Brown Mouse",
+            width=150,
+            height=50,
+            style=arcade.gui.UIFlatButton.STYLE_BLUE
+        )
+        mouse_button_box.add(brown_button)
+        
+        @brown_button.event("on_click")
+        def on_brown_click(_):
+            game_view = GameView(game_mode=GameMode.STORY_MODE, story_mouse_color="brown")
+            game_view.setup()
+            self.window.show_view(game_view)
+        
+        menu_box.add(mouse_button_box)
+        
+        menu_box.add(arcade.gui.UISpace(height=30))
+        
+        # Back button
+        back_button = arcade.gui.UIFlatButton(
+            text="Back to Main Menu",
+            width=250,
+            height=45,
+            style=arcade.gui.UIFlatButton.STYLE_RED
+        )
+        menu_box.add(back_button)
+        
+        @back_button.event("on_click")
+        def on_back_click(_):
+            main_menu = MainMenuView()
+            self.window.show_view(main_menu)
+        
+        # Center the menu
+        root.add(menu_box, anchor_x="center", anchor_y="center")
+        self.ui.add(root)
+
+    def on_show_view(self):
+        """ This is run once when we switch to this view """
+        arcade.set_background_color(arcade.color.TEAL)
+        self.ui.enable()
+
+    def on_hide_view(self):
+        """ Disable UI when leaving view """
+        self.ui.disable()
+
+    def on_draw(self):
+        """ Render the screen. """
+        self.clear()
+        self.ui.draw()
+
 # Settings Menu View with maze size options
 class SettingsView(arcade.View):
 
-    def __init__(self, previous_view=None):
+    def __init__(self, previous_view=None, game_mode=GameMode.FREE_PLAY):
         super().__init__()
         self.previous_view = previous_view  # Store the view that opened settings
+        self.game_mode = game_mode
         self.ui = arcade.gui.UIManager()
         
         # Create main layout
@@ -144,127 +286,126 @@ class SettingsView(arcade.View):
         
         menu_box.add(arcade.gui.UISpace(height=15))
         
-        # Add maze size label
-        size_label = arcade.gui.UILabel(
-            text="Maze Size",
-            font_size=20,
-            text_color=arcade.color.WHITE,
-            bold=True
-        )
-        menu_box.add(size_label)
-        
-        menu_box.add(arcade.gui.UISpace(height=5))
-        
-        # Create horizontal box for size buttons to save vertical space
-        size_button_box = arcade.gui.UIBoxLayout(vertical=False, space_between=10)
-        # Create horizontal box for size buttons to save vertical space
-        size_button_box = arcade.gui.UIBoxLayout(vertical=False, space_between=10)
-        
-        small_button = arcade.gui.UIFlatButton(
-            text="Small",
-            width=75,
-            height=40,
-            style=arcade.gui.UIFlatButton.STYLE_BLUE if MAZE_SIZE_SETTING == 21 else None
-        )
-        size_button_box.add(small_button)
-        
-        @small_button.event("on_click")
-        def on_small_click(_):
-            global MAZE_SIZE_SETTING
-            MAZE_SIZE_SETTING = 21
-            self.window.show_view(SettingsView(previous_view=self.previous_view))  # Preserve previous view
-        
-        medium_button = arcade.gui.UIFlatButton(
-            text="Medium",
-            width=75,
-            height=40,
-            style=arcade.gui.UIFlatButton.STYLE_BLUE if MAZE_SIZE_SETTING == 31 else None
-        )
-        size_button_box.add(medium_button)
-        
-        @medium_button.event("on_click")
-        def on_medium_click(_):
-            global MAZE_SIZE_SETTING
-            MAZE_SIZE_SETTING = 31
-            self.window.show_view(SettingsView(previous_view=self.previous_view))  # Preserve previous view
-        
-        large_button = arcade.gui.UIFlatButton(
-            text="Large",
-            width=75,
-            height=40,
-            style=arcade.gui.UIFlatButton.STYLE_BLUE if MAZE_SIZE_SETTING == 51 else None
-        )
-        size_button_box.add(large_button)
-        
-        @large_button.event("on_click")
-        def on_large_click(_):
-            global MAZE_SIZE_SETTING
-            MAZE_SIZE_SETTING = 51
-            self.window.show_view(SettingsView(previous_view=self.previous_view))  # Preserve previous view
-        
-        menu_box.add(size_button_box)
-        
-        menu_box.add(arcade.gui.UISpace(height=15))
+        if self.game_mode == GameMode.FREE_PLAY:
+            # Add maze size label
+            size_label = arcade.gui.UILabel(
+                text="Maze Size",
+                font_size=20,
+                text_color=arcade.color.WHITE,
+                bold=True
+            )
+            menu_box.add(size_label)
+            
+            menu_box.add(arcade.gui.UISpace(height=5))
+            
+            # Create horizontal box for size buttons to save vertical space
+            size_button_box = arcade.gui.UIBoxLayout(vertical=False, space_between=10)
+            
+            small_button = arcade.gui.UIFlatButton(
+                text="Small",
+                width=75,
+                height=40,
+                style=arcade.gui.UIFlatButton.STYLE_BLUE if MAZE_SIZE_SETTING == 21 else None
+            )
+            size_button_box.add(small_button)
+            
+            @small_button.event("on_click")
+            def on_small_click(_):
+                global MAZE_SIZE_SETTING
+                MAZE_SIZE_SETTING = 21
+                self.window.show_view(SettingsView(previous_view=self.previous_view, game_mode=self.game_mode))  # Preserve previous view
+            
+            medium_button = arcade.gui.UIFlatButton(
+                text="Medium",
+                width=75,
+                height=40,
+                style=arcade.gui.UIFlatButton.STYLE_BLUE if MAZE_SIZE_SETTING == 31 else None
+            )
+            size_button_box.add(medium_button)
+            
+            @medium_button.event("on_click")
+            def on_medium_click(_):
+                global MAZE_SIZE_SETTING
+                MAZE_SIZE_SETTING = 31
+                self.window.show_view(SettingsView(previous_view=self.previous_view, game_mode=self.game_mode))  # Preserve previous view
+            
+            large_button = arcade.gui.UIFlatButton(
+                text="Large",
+                width=75,
+                height=40,
+                style=arcade.gui.UIFlatButton.STYLE_BLUE if MAZE_SIZE_SETTING == 51 else None
+            )
+            size_button_box.add(large_button)
+            
+            @large_button.event("on_click")
+            def on_large_click(_):
+                global MAZE_SIZE_SETTING
+                MAZE_SIZE_SETTING = 51
+                self.window.show_view(SettingsView(previous_view=self.previous_view, game_mode=self.game_mode))  # Preserve previous view
+            
+            menu_box.add(size_button_box)
+            
+            menu_box.add(arcade.gui.UISpace(height=15))
 
-        # Mouse color section
-        mouse_label = arcade.gui.UILabel(
-            text="Mouse Color",
-            font_size=20,
-            text_color=arcade.color.WHITE,
-            bold=True
-        )
-        menu_box.add(mouse_label)
-        
-        menu_box.add(arcade.gui.UISpace(height=5))
-        
-        # Create horizontal box for mouse color buttons
-        mouse_button_box = arcade.gui.UIBoxLayout(vertical=False, space_between=10)
-        
-        white_button = arcade.gui.UIFlatButton(
-            text="White",
-            width=75,
-            height=40,
-            style=arcade.gui.UIFlatButton.STYLE_BLUE if MOUSE_COLOR_SETTING == "white" else None
-        )
-        mouse_button_box.add(white_button)
-        
-        @white_button.event("on_click")
-        def on_white_click(_):
-            global MOUSE_COLOR_SETTING
-            MOUSE_COLOR_SETTING = "white"
-            self.window.show_view(SettingsView(previous_view=self.previous_view))
-        
-        grey_button = arcade.gui.UIFlatButton(
-            text="Grey",
-            width=75,
-            height=40,
-            style=arcade.gui.UIFlatButton.STYLE_BLUE if MOUSE_COLOR_SETTING == "grey" else None
-        )
-        mouse_button_box.add(grey_button)
-        
-        @grey_button.event("on_click")
-        def on_grey_click(_):
-            global MOUSE_COLOR_SETTING
-            MOUSE_COLOR_SETTING = "grey"
-            self.window.show_view(SettingsView(previous_view=self.previous_view))
-        
-        brown_button = arcade.gui.UIFlatButton(
-            text="Brown",
-            width=75,
-            height=40,
-            style=arcade.gui.UIFlatButton.STYLE_BLUE if MOUSE_COLOR_SETTING == "brown" else None
-        )
-        mouse_button_box.add(brown_button)
-        
-        @brown_button.event("on_click")
-        def on_brown_click(_):
-            global MOUSE_COLOR_SETTING
-            MOUSE_COLOR_SETTING = "brown"
-            self.window.show_view(SettingsView(previous_view=self.previous_view))
-        
-        menu_box.add(mouse_button_box)
-        
-        menu_box.add(arcade.gui.UISpace(height=15))
+            # Mouse color section
+            mouse_label = arcade.gui.UILabel(
+                text="Mouse Color",
+                font_size=20,
+                text_color=arcade.color.WHITE,
+                bold=True
+            )
+            menu_box.add(mouse_label)
+            
+            menu_box.add(arcade.gui.UISpace(height=5))
+            
+            # Create horizontal box for mouse color buttons
+            mouse_button_box = arcade.gui.UIBoxLayout(vertical=False, space_between=10)
+            
+            white_button = arcade.gui.UIFlatButton(
+                text="White",
+                width=75,
+                height=40,
+                style=arcade.gui.UIFlatButton.STYLE_BLUE if MOUSE_COLOR_SETTING == "white" else None
+            )
+            mouse_button_box.add(white_button)
+            
+            @white_button.event("on_click")
+            def on_white_click(_):
+                global MOUSE_COLOR_SETTING
+                MOUSE_COLOR_SETTING = "white"
+                self.window.show_view(SettingsView(previous_view=self.previous_view))
+            
+            grey_button = arcade.gui.UIFlatButton(
+                text="Grey",
+                width=75,
+                height=40,
+                style=arcade.gui.UIFlatButton.STYLE_BLUE if MOUSE_COLOR_SETTING == "grey" else None
+            )
+            mouse_button_box.add(grey_button)
+            
+            @grey_button.event("on_click")
+            def on_grey_click(_):
+                global MOUSE_COLOR_SETTING
+                MOUSE_COLOR_SETTING = "grey"
+                self.window.show_view(SettingsView(previous_view=self.previous_view))
+            
+            brown_button = arcade.gui.UIFlatButton(
+                text="Brown",
+                width=75,
+                height=40,
+                style=arcade.gui.UIFlatButton.STYLE_BLUE if MOUSE_COLOR_SETTING == "brown" else None
+            )
+            mouse_button_box.add(brown_button)
+            
+            @brown_button.event("on_click")
+            def on_brown_click(_):
+                global MOUSE_COLOR_SETTING
+                MOUSE_COLOR_SETTING = "brown"
+                self.window.show_view(SettingsView(previous_view=self.previous_view))
+            
+            menu_box.add(mouse_button_box)
+            
+            menu_box.add(arcade.gui.UISpace(height=15))
         
         # Volume section - combine label and percentage
         volume_header_box = arcade.gui.UIBoxLayout(vertical=False, space_between=10)
@@ -406,7 +547,7 @@ class InGameMenuView(arcade.View):
         
         @settings_button.event("on_click")
         def on_settings_click(_):
-            settings_view = SettingsView(previous_view=self)
+            settings_view = SettingsView(previous_view=self, game_mode=self.game_view.game_mode)
             self.window.show_view(settings_view)
         
         # Create main menu button
@@ -665,11 +806,106 @@ class CongratulationsView(arcade.View):
             # Return to game view
             self.window.show_view(self.game_view)
 
+# Grand victory
+class StoryVictoryView(arcade.View):
+    """View shown when player completes all 10 mazes in story mode"""
+
+    def __init__(self, game_view):
+        super().__init__()
+        self.game_view = game_view
+        self.ui = arcade.gui.UIManager()
+        
+        # Create main layout
+        root = arcade.gui.UIAnchorLayout()
+        
+        # Create vertical box for content
+        content_box = arcade.gui.UIBoxLayout(vertical=True, space_between=20)
+        
+        # Add victory title
+        title = arcade.gui.UILabel(
+            text="STORY COMPLETE!",
+            font_size=60,
+            text_color=arcade.color.GOLD,
+            bold=True
+        )
+        content_box.add(title)
+        
+        # Add congratulations message
+        subtitle = arcade.gui.UILabel(
+            text="You've conquered all 10 mazes!",
+            font_size=30,
+            text_color=arcade.color.WHITE
+        )
+        content_box.add(subtitle)
+        
+        content_box.add(arcade.gui.UISpace(height=30))
+        
+        # Add statistics
+        total_score_text = f"Total Cheese Collected: {self.game_view.grand_total_score}"
+        score_label = arcade.gui.UILabel(
+            text=total_score_text,
+            font_size=20,
+            text_color=arcade.color.YELLOW
+        )
+        content_box.add(score_label)
+        
+        # Add total time if tracked
+        if hasattr(game_view, 'total_story_time'):
+            time_text = f"Total Time: {self.game_view.total_story_time:.2f} seconds"
+            time_label = arcade.gui.UILabel(
+                text=time_text,
+                font_size=20,
+                text_color=arcade.color.WHITE
+            )
+            content_box.add(time_label)
+        
+        content_box.add(arcade.gui.UISpace(height=40))
+        
+        # Main menu button
+        menu_button = arcade.gui.UIFlatButton(
+            text="Return to Main Menu",
+            width=300,
+            height=60,
+            style=arcade.gui.UIFlatButton.STYLE_BLUE
+        )
+        content_box.add(menu_button)
+        
+        @menu_button.event("on_click")
+        def on_menu_click(_):
+            main_menu_view = MainMenuView()
+            self.window.show_view(main_menu_view)
+        
+        # Center everything
+        root.add(content_box, anchor_x="center", anchor_y="center")
+        self.ui.add(root)
+
+    def on_show_view(self):
+        """ This is run once when we switch to this view """
+        arcade.set_background_color(arcade.color.DARK_GREEN)
+        self.ui.enable()
+
+    def on_hide_view(self):
+        """ Disable UI when leaving view """
+        self.ui.disable()
+
+    def on_draw(self):
+        """ Render the screen. """
+        self.clear()
+        self.ui.draw()
+
 # Main application class
 class GameView(arcade.View):
 
-    def __init__(self):
+    def __init__(self, game_mode=GameMode.FREE_PLAY, story_mouse_color="white"):
         super().__init__()
+
+         # Game mode
+        self.game_mode = game_mode
+        self.story_mouse_color = story_mouse_color  # Locked mouse color for story mode
+        
+        # Story mode specific tracking
+        self.story_maze_index = 0  # Current maze in the sequence (0-9)
+        self.total_story_time = 0  # Total time across all story mazes
 
         # Sprite lists
         self.player_list = None
@@ -772,8 +1008,19 @@ class GameView(arcade.View):
         # Set camera zoom
         self.camera_sprites.zoom = 2.0
 
+        # Determine maze size based on game mode
+        if self.game_mode == GameMode.STORY_MODE:
+            # Use the maze size from the story sequence
+            current_maze_size = STORY_MODE_MAZE_SEQUENCE[self.story_maze_index]
+            # Use the locked mouse color
+            mouse_color = self.story_mouse_color
+        else:
+            # Free play: use global settings
+            current_maze_size = MAZE_SIZE_SETTING
+            mouse_color = MOUSE_COLOR_SETTING
+
         # Load textures for left and right facing mouse based on setting
-        mouse_filename = f"images/sprites/{MOUSE_COLOR_SETTING}_mouse.png"
+        mouse_filename = f"images/sprites/{mouse_color}_mouse.png"
         self.mouse_texture_right = arcade.load_texture(mouse_filename)
         self.mouse_texture_left = self.mouse_texture_right.flip_left_right()
 
@@ -783,23 +1030,26 @@ class GameView(arcade.View):
         self.exit_sound = arcade.Sound("sounds/exit.wav")
 
         # Pathfinder power variables
-        self.pathfinder_uses_remaining = 3  # Uses available
-        self.pathfinder_max_uses = 3  # Maximum uses per maze
+        self.pathfinder_uses_remaining = PATHFINDER_MAX_USES  # Uses available
+        self.pathfinder_max_uses = PATHFINDER_MAX_USES  # Maximum uses per maze
         self.pathfinder_active = False  # Is path currently shown?
         self.pathfinder_timer = 0.0  # Timer for auto-hide
-        self.pathfinder_duration = 3.0  # How long path stays visible (seconds)
-        self.pathfinder_max_tiles = 10  # Maximum path tiles to show
-
+        self.pathfinder_duration = PATHFINDER_DURATION  # How long path stays visible (seconds)
+        self.pathfinder_max_tiles = PATHFINDER_MAX_TILES  # Maximum path tiles to show
+        
         # Create the maze using the current size setting
-        maze = make_maze(MAZE_SIZE_SETTING, MAZE_SIZE_SETTING)
+        # Maze must have an ODD number of rows and columns
+        # Walls go on EVEN rows/columns.
+        # Openings go on ODD rows/columns
+        maze = make_maze(current_maze_size, current_maze_size)
         self.maze = maze  # Store maze for pathfinding
 
         # Create sprites based on 2D grid
         if not MERGE_SPRITES:
             # This is the simple-to-understand method. Each grid location
             # is a sprite
-            for row in range(MAZE_SIZE_SETTING):
-                for column in range(MAZE_SIZE_SETTING):
+            for row in range(current_maze_size):
+                for column in range(current_maze_size):
                     if maze[row][column] == TILE_CRATE:
                         wall = arcade.Sprite(
                             "images/tiles/blankTile.png",
@@ -813,7 +1063,7 @@ class GameView(arcade.View):
             # larger sprite with a repeating texture. So if there are multiple
             # cells in a row with a wall, we merge them into one sprite, with a
             # repeating texture for each cell. This reduces our sprite count
-            for row in range(MAZE_SIZE_SETTING):
+            for row in range(current_maze_size):
                 column = 0
                 while column < len(maze):
                     while column < len(maze) and maze[row][column] == TILE_EMPTY:
@@ -841,8 +1091,8 @@ class GameView(arcade.View):
                     self.wall_list.append(wall)
 
         # Create floor tiles for all empty (walkable) spaces in the maze
-        for row in range(MAZE_SIZE_SETTING):
-            for column in range(MAZE_SIZE_SETTING):
+        for row in range(current_maze_size):
+            for column in range(current_maze_size):
                 if maze[row][column] == TILE_EMPTY:
                     floor = arcade.Sprite(
                         "images/tiles/blankTile.png",
@@ -874,8 +1124,8 @@ class GameView(arcade.View):
             "images/tiles/blankTile.png",
             scale=SPRITE_SCALING,
         )
-        black_tile.center_x = (MAZE_SIZE_SETTING - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
-        black_tile.center_y = (MAZE_SIZE_SETTING - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
+        black_tile.center_x = (current_maze_size - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
+        black_tile.center_y = (current_maze_size - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
         black_tile.color = arcade.color.BLACK
         self.path_list.append(black_tile)
 
@@ -884,8 +1134,8 @@ class GameView(arcade.View):
             "images/tiles/exitSign.png",
             scale=SPRITE_SCALING,
         )
-        exit_sprite.center_x = (MAZE_SIZE_SETTING - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
-        exit_sprite.center_y = (MAZE_SIZE_SETTING - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
+        exit_sprite.center_x = (current_maze_size - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
+        exit_sprite.center_y = (current_maze_size - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
         self.exit_list.append(exit_sprite)
 
         self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.wall_list)
@@ -896,10 +1146,10 @@ class GameView(arcade.View):
         # Randomly place coins in the maze
         # Only place on verified empty tiles, and avoid player/exit positions
         player_pos = (1, 1)
-        exit_pos = (MAZE_SIZE_SETTING - 2, MAZE_SIZE_SETTING - 2)
+        exit_pos = (current_maze_size - 2, current_maze_size - 2)
         
-        for row in range(1, MAZE_SIZE_SETTING - 1):
-            for column in range(1, MAZE_SIZE_SETTING - 1):
+        for row in range(1, current_maze_size - 1):
+            for column in range(1, current_maze_size - 1):
                 # Check if tile is empty, not player/exit position, and random chance
                 if (maze[row][column] == TILE_EMPTY and 
                     (row, column) != player_pos and 
@@ -946,10 +1196,19 @@ class GameView(arcade.View):
 
         output = f"Completed: {self.completed_mazes}"
         arcade.draw_text(output, 20, WINDOW_HEIGHT - 80, arcade.color.WHITE, 16)
+        
+        # Show maze size for current maze
+        if self.game_mode == GameMode.STORY_MODE:
+            current_size = STORY_MODE_MAZE_SEQUENCE[self.story_maze_index]
+        else:
+            current_size = MAZE_SIZE_SETTING
+        size_name = "Small" if current_size == 21 else "Medium" if current_size == 31 else "Large"
+        output = f"Maze Size: {size_name}"
+        arcade.draw_text(output, 20, WINDOW_HEIGHT - 100, arcade.color.WHITE, 16)
 
         # Draw pathfinder uses remaining
         output = f"Pathfinder: {self.pathfinder_uses_remaining}/{self.pathfinder_max_uses}"
-        arcade.draw_text(output, 20, WINDOW_HEIGHT - 100, arcade.color.LIGHT_BLUE, 16, bold=True)
+        arcade.draw_text(output, 20, WINDOW_HEIGHT - 120, arcade.color.LIGHT_BLUE, 16, bold=True)
 
 
     # Calculate speed based on the keys pressed
@@ -1067,10 +1326,29 @@ class GameView(arcade.View):
             self.player_sprite.center_x < exit_tile_right and
             self.player_sprite.center_y > exit_tile_bottom and 
             self.player_sprite.center_y < exit_tile_top):
+
             self.exit_sound.play(volume=0.3 * VOLUME_SETTING)
-            # Show congratulations view
-            congratulations_view = CongratulationsView(self)
-            self.window.show_view(congratulations_view)
+
+            if self.game_mode == GameMode.STORY_MODE:
+                # Track total time across all mazes
+                self.total_story_time += self.elapsed_time
+                
+                # Check if this was the last maze
+                if self.story_maze_index >= STORY_MODE_TOTAL_MAZES - 1:
+                    # Story complete! Show victory screen
+                    victory_view = StoryVictoryView(self)
+                    self.window.show_view(victory_view)
+                else:
+                    # Move to next maze in story
+                    self.story_maze_index += 1
+                    self.elapsed_time = 0
+                    self.completed_mazes += 1
+                    self.setup()  # Generate next maze
+                    # Note: No congratulations screen in story mode, seamless transition
+            else:
+                # Free play mode - show congratulations
+                congratulations_view = CongratulationsView(self)
+                self.window.show_view(congratulations_view)
 
         # Update the elapsed time
         self.elapsed_time += delta_time
@@ -1108,10 +1386,16 @@ class GameView(arcade.View):
         # Convert player position from pixels to grid coordinates
         player_grid_x = int(self.player_sprite.center_x / SPRITE_SIZE)
         player_grid_y = int(self.player_sprite.center_y / SPRITE_SIZE)
+
+        # Determine current maze size
+        if self.game_mode == GameMode.STORY_MODE:
+            current_maze_size = STORY_MODE_MAZE_SEQUENCE[self.story_maze_index]
+        else:
+            current_maze_size = MAZE_SIZE_SETTING
         
         # A* expects (row, column) which is (y, x)
         start = (player_grid_y, player_grid_x)
-        goal = (MAZE_SIZE_SETTING - 2, MAZE_SIZE_SETTING - 2)
+        goal = (current_maze_size - 2, current_maze_size - 2)
         
         path = astar(maze, start, goal)
         
