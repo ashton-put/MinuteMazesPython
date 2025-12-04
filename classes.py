@@ -950,8 +950,8 @@ class GameView(arcade.View):
         self.initial_player_x = SPRITE_SIZE + SPRITE_SIZE / 2
         self.initial_player_y = SPRITE_SIZE + SPRITE_SIZE / 2
 
+    # Handle playing background music when the game starts
     def on_show_view(self):
-        """Resume music when returning to game view"""
         if self.music_player:
             if self.music_is_paused:
                 # Resume from pause
@@ -962,14 +962,14 @@ class GameView(arcade.View):
             self.music_player = self.gameplay_music.play(volume=0.3 * VOLUME_SETTING)
             self.music_player.push_handlers(on_eos=self.loop_gameplay_music)
 
+    # Handle pausing background music when pause menu or congrats screen shows
     def on_hide_view(self):
-        """Pause music when leaving game view"""
         if self.music_player and self.music_player.playing:
             self.music_player.pause()
             self.music_is_paused = True
 
+    # Handle looping the background music
     def loop_gameplay_music(self):
-        """Loop gameplay music"""
         if self.music_player:
             self.music_player.pop_handlers()
         self.music_player = self.gameplay_music.play(volume=0.3 * VOLUME_SETTING)
@@ -1017,7 +1017,6 @@ class GameView(arcade.View):
         
         # Reset camera to player
         self.camera_sprites.position = (self.player_sprite.center_x, self.player_sprite.center_y)
-
 
     # Set up the game and initialize the variables
     def setup(self):
@@ -1241,7 +1240,6 @@ class GameView(arcade.View):
         output = f"Pathfinder: {self.pathfinder_uses_remaining}/{self.pathfinder_max_uses}"
         arcade.draw_text(output, 20, WINDOW_HEIGHT - 120, arcade.color.LIGHT_BLUE, 16, bold=True)
 
-
     # Calculate speed based on the keys pressed
     def update_player_speed(self):
         self.player_sprite.change_x = 0
@@ -1267,7 +1265,6 @@ class GameView(arcade.View):
             self.player_sprite.texture = self.player_sprite.textures[0]  # Face left
         elif self.player_sprite.change_x > 0:
             self.player_sprite.texture = self.player_sprite.textures[1]  # Face right
-
 
     # Called whenever a key is pressed
     def on_key_press(self, key, modifiers):
@@ -1311,7 +1308,6 @@ class GameView(arcade.View):
             self.right_pressed = True
             self.update_player_speed()
 
-
     # Called when the user releases a key (important for movement)
     def on_key_release(self, key, modifiers):
         if key in (arcade.key.UP, arcade.key.W):
@@ -1326,7 +1322,6 @@ class GameView(arcade.View):
         elif key in (arcade.key.RIGHT, arcade.key.D):
             self.right_pressed = False
             self.update_player_speed()
-
 
     # Movement and game logic
     def on_update(self, delta_time):
@@ -1399,28 +1394,6 @@ class GameView(arcade.View):
         # Scroll the screen to the player
         self.scroll_to_player()
 
-    # # Loop the gameplay music
-    # def loop_gameplay_music(self):
-    #     """Loop gameplay music"""
-    #     self.music_player = self.gameplay_music.play(volume=0.3)
-    #     self.music_player.push_handlers(on_eos=self.loop_gameplay_music)
-    
-    # def on_show_view(self):
-    #     """Resume music when returning to game view"""
-    #     # Resume music if it was playing
-    #     if self.music_player and not self.music_player.playing:
-    #         self.music_player.play()
-    #     elif not self.music_player:
-    #         # Music player was deleted, restart it
-    #         self.music_player = self.gameplay_music.play(volume=0.3 * VOLUME_SETTING)
-    #         self.music_player.push_handlers(on_eos=self.loop_gameplay_music)
-
-    # def on_hide_view(self):
-    #     """Pause music when leaving game view (but don't destroy player)"""
-    #     if self.music_player and self.music_player.playing:
-    #         self.music_player.pause()
-    #         # DON'T set self.music_player = None here!
-
     #  Scroll the window to the player.
         # if CAMERA_SPEED is 1, the camera will immediately move to the desired
         # position. Anything between 0 and 1 will have the camera move to the
@@ -1431,7 +1404,6 @@ class GameView(arcade.View):
             self.camera_sprites.position, position, CAMERA_SPEED
         )
     
-
     # Pathfinder function to draw a path with tiles from the players position to the exit
     # utilizes A* 
     def pathfinder(self, maze):
