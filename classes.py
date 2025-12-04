@@ -233,7 +233,7 @@ class MouseSelectionView(arcade.View):
             text="Back to Main Menu",
             width=250,
             height=45,
-            style=arcade.gui.UIFlatButton.STYLE_RED
+            style=arcade.gui.UIFlatButton.STYLE_BLUE
         )
         menu_box.add(back_button)
         
@@ -457,7 +457,7 @@ class SettingsView(arcade.View):
             text=back_text,
             width=250,
             height=45,
-            style=arcade.gui.UIFlatButton.STYLE_RED
+            style=arcade.gui.UIFlatButton.STYLE_BLUE
         )
         menu_box.add(back_button)
         
@@ -806,9 +806,8 @@ class CongratulationsView(arcade.View):
             # Return to game view
             self.window.show_view(self.game_view)
 
-# Grand victory
+# Grand victory shown when player completes all 10 mazes in story mode
 class StoryVictoryView(arcade.View):
-    """View shown when player completes all 10 mazes in story mode"""
 
     def __init__(self, game_view):
         super().__init__()
@@ -881,7 +880,7 @@ class StoryVictoryView(arcade.View):
 
     def on_show_view(self):
         """ This is run once when we switch to this view """
-        arcade.set_background_color(arcade.color.DARK_GREEN)
+        arcade.set_background_color(arcade.color.TEAL)
         self.ui.enable()
 
     def on_hide_view(self):
