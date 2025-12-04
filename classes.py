@@ -898,6 +898,10 @@ class GameView(arcade.View):
     def __init__(self, game_mode=GameMode.FREE_PLAY, story_mouse_color="white"):
         super().__init__()
 
+        # Load gameplay music
+        self.gameplay_music = arcade.load_sound("sounds/music.mp3")
+        self.music_player = None
+
          # Game mode
         self.game_mode = game_mode
         self.story_mouse_color = story_mouse_color  # Locked mouse color for story mode
@@ -946,6 +950,30 @@ class GameView(arcade.View):
         self.initial_player_x = SPRITE_SIZE + SPRITE_SIZE / 2
         self.initial_player_y = SPRITE_SIZE + SPRITE_SIZE / 2
 
+    def on_show_view(self):
+        """Resume music when returning to game view"""
+        if self.music_player:
+            if self.music_is_paused:
+                # Resume from pause
+                self.music_player.play()
+                self.music_is_paused = False
+        elif not self.music_player:
+            # First time showing view or player was destroyed - start fresh
+            self.music_player = self.gameplay_music.play(volume=0.3 * VOLUME_SETTING)
+            self.music_player.push_handlers(on_eos=self.loop_gameplay_music)
+
+    def on_hide_view(self):
+        """Pause music when leaving game view"""
+        if self.music_player and self.music_player.playing:
+            self.music_player.pause()
+            self.music_is_paused = True
+
+    def loop_gameplay_music(self):
+        """Loop gameplay music"""
+        if self.music_player:
+            self.music_player.pop_handlers()
+        self.music_player = self.gameplay_music.play(volume=0.3 * VOLUME_SETTING)
+        self.music_player.push_handlers(on_eos=self.loop_gameplay_music)
 
     # Restart the current maze without regenerating it
     # deduct_score: If True, deduct collected coins from grand total (for mid-game restart).
@@ -1161,7 +1189,11 @@ class GameView(arcade.View):
                     coin.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
                     coin.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
                     self.coin_list.append(coin)
-
+        
+        # Start gameplay music if not already playing
+        if not self.music_player:
+            self.music_player = self.gameplay_music.play(volume=0.3 * VOLUME_SETTING)
+            self.music_player.push_handlers(on_eos=self.loop_gameplay_music)
 
     # Render the screen
     def on_draw(self):
@@ -1367,6 +1399,27 @@ class GameView(arcade.View):
         # Scroll the screen to the player
         self.scroll_to_player()
 
+    # # Loop the gameplay music
+    # def loop_gameplay_music(self):
+    #     """Loop gameplay music"""
+    #     self.music_player = self.gameplay_music.play(volume=0.3)
+    #     self.music_player.push_handlers(on_eos=self.loop_gameplay_music)
+    
+    # def on_show_view(self):
+    #     """Resume music when returning to game view"""
+    #     # Resume music if it was playing
+    #     if self.music_player and not self.music_player.playing:
+    #         self.music_player.play()
+    #     elif not self.music_player:
+    #         # Music player was deleted, restart it
+    #         self.music_player = self.gameplay_music.play(volume=0.3 * VOLUME_SETTING)
+    #         self.music_player.push_handlers(on_eos=self.loop_gameplay_music)
+
+    # def on_hide_view(self):
+    #     """Pause music when leaving game view (but don't destroy player)"""
+    #     if self.music_player and self.music_player.playing:
+    #         self.music_player.pause()
+    #         # DON'T set self.music_player = None here!
 
     #  Scroll the window to the player.
         # if CAMERA_SPEED is 1, the camera will immediately move to the desired
