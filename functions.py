@@ -5,7 +5,7 @@ import heapq
 from constants import TILE_EMPTY, TILE_CRATE
 
 # Create a grid with empty cells on odd row/column combinations
-def _create_grid_with_cells(width, height):
+def create_grid_with_cells(width, height):
     grid = []
     for row in range(height):
         grid.append([])
@@ -22,7 +22,7 @@ def _create_grid_with_cells(width, height):
 # The maze is created by walking through the grid and creating walls between cells
 # The walls are created by setting the cell to TILE_EMPTY
 def make_maze(maze_width, maze_height):
-    maze = _create_grid_with_cells(maze_width, maze_height)
+    maze = create_grid_with_cells(maze_width, maze_height)
 
     w = (len(maze[0]) - 1) // 2
     h = (len(maze) - 1) // 2
