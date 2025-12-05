@@ -2,6 +2,7 @@
 
 import random
 import arcade
+import constants
 from constants import (
     SPRITE_SCALING,
     SPRITE_SIZE,
@@ -10,7 +11,11 @@ from constants import (
     TILE_CRATE,
     MERGE_SPRITES,
     MOVEMENT_SPEED,
+    DIAGONAL_MOVEMENT_FACTOR,
     CAMERA_SPEED,
+    CAMERA_ZOOM,
+    MUSIC_VOLUME_MULTIPLIER,
+    SOUND_VOLUME_MULTIPLIER,
     STORY_MODE_MAZE_SEQUENCE,
     STORY_MODE_TOTAL_MAZES,
     PATHFINDER_DURATION,
@@ -19,7 +24,6 @@ from constants import (
 )
 from functions import make_maze, astar
 from view_manager import GameMode
-from views import MAZE_SIZE_SETTING, MOUSE_COLOR_SETTING, VOLUME_SETTING
 
 # Main application class
 class GameView(arcade.View):
@@ -81,6 +85,10 @@ class GameView(arcade.View):
         # Store initial player position for restart
         self.initial_player_x = SPRITE_SIZE + SPRITE_SIZE / 2
         self.initial_player_y = SPRITE_SIZE + SPRITE_SIZE / 2
+        
+        # Pathfinder state
+        self.pathfinder_active = False
+        self.pathfinder_timer = 0.0
 
     # Handle playing background music when the game starts
     def on_show_view(self):
@@ -91,7 +99,7 @@ class GameView(arcade.View):
                 self.music_is_paused = False
         elif not self.music_player:
             # First time showing view or player was destroyed - start fresh
-            self.music_player = self.gameplay_music.play(volume=0.3 * VOLUME_SETTING)
+            self.music_player = self.gameplay_music.play(volume=MUSIC_VOLUME_MULTIPLIER * constants.VOLUME_SETTING)
             self.music_player.push_handlers(on_eos=self.loop_gameplay_music)
 
     # Handle pausing background music when pause menu or congrats screen shows
@@ -104,8 +112,120 @@ class GameView(arcade.View):
     def loop_gameplay_music(self):
         if self.music_player:
             self.music_player.pop_handlers()
-        self.music_player = self.gameplay_music.play(volume=0.3 * VOLUME_SETTING)
+        self.music_player = self.gameplay_music.play(volume=MUSIC_VOLUME_MULTIPLIER * constants.VOLUME_SETTING)
         self.music_player.push_handlers(on_eos=self.loop_gameplay_music)
+    
+    # Clear the pathfinder path visualization, preserving the black exit tile
+    def clear_pathfinder(self):
+        if self.path_list and len(self.path_list) > 0:
+            black_tile = self.path_list[0]  # First tile is always the black exit marker
+            self.path_list = arcade.SpriteList()
+            self.path_list.append(black_tile)
+        self.pathfinder_active = False
+        self.pathfinder_timer = 0.0
+    
+    # Create the black tile marker at the exit position
+    def create_exit_black_tile(self):
+        if self.game_mode == GameMode.STORY_MODE:
+            current_maze_size = STORY_MODE_MAZE_SEQUENCE[self.story_maze_index]
+        else:
+            current_maze_size = constants.MAZE_SIZE_SETTING
+        
+        black_tile = arcade.Sprite("images/tiles/blankTile.png", scale=SPRITE_SCALING)
+        black_tile.center_x = (current_maze_size - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
+        black_tile.center_y = (current_maze_size - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
+        black_tile.color = arcade.color.BLACK
+        self.path_list.append(black_tile)
+    
+    # Return the current maze size based on game mode
+    def get_current_maze_size(self):
+        if self.game_mode == GameMode.STORY_MODE:
+            return STORY_MODE_MAZE_SEQUENCE[self.story_maze_index]
+        else:
+            return constants.MAZE_SIZE_SETTING
+    
+    # Return the current mouse color based on game mode
+    def get_current_mouse_color(self):
+        if self.game_mode == GameMode.STORY_MODE:
+            return self.story_mouse_color
+        else:
+            return constants.MOUSE_COLOR_SETTING
+    
+    # Create wall sprites from maze grid
+    def create_maze_walls(self, maze, maze_size):
+        if not MERGE_SPRITES:
+            # Simple method: Each grid location is a sprite
+            for row in range(maze_size):
+                for column in range(maze_size):
+                    if maze[row][column] == TILE_CRATE:
+                        wall = arcade.Sprite("images/tiles/blankTile.png", scale=SPRITE_SCALING)
+                        wall.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
+                        wall.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
+                        self.wall_list.append(wall)
+        else:
+            # Optimized: Merge consecutive walls into larger sprites
+            for row in range(maze_size):
+                column = 0
+                while column < len(maze):
+                    while column < len(maze) and maze[row][column] == TILE_EMPTY:
+                        column += 1
+                    start_column = column
+                    while column < len(maze) and maze[row][column] == TILE_CRATE:
+                        column += 1
+                    end_column = column - 1
+
+                    column_count = end_column - start_column + 1
+                    column_mid = (start_column + end_column) / 2
+                    
+                    wall = arcade.Sprite("images/tiles/blankTile.png", scale=SPRITE_SCALING)
+                    wall.center_x = column_mid * SPRITE_SIZE + SPRITE_SIZE / 2
+                    wall.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
+                    wall.width = SPRITE_SIZE * column_count
+                    wall.color = arcade.color.DODGER_BLUE
+                    self.wall_list.append(wall)
+    
+    # Create floor sprites for walkable areas
+    def create_maze_floor(self, maze, maze_size):
+        for row in range(maze_size):
+            for column in range(maze_size):
+                if maze[row][column] == TILE_EMPTY:
+                    floor = arcade.Sprite("images/tiles/blankTile.png", scale=SPRITE_SCALING)
+                    floor.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
+                    floor.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
+                    floor.color = arcade.color.DEEP_SKY_BLUE
+                    self.floor_list.append(floor)
+    
+    # Initialize player sprite with textures
+    def setup_player(self, mouse_color):
+        mouse_filename = f"images/sprites/{mouse_color}_mouse.png"
+        self.mouse_texture_right = arcade.load_texture(mouse_filename)
+        self.mouse_texture_left = self.mouse_texture_right.flip_left_right()
+        
+        self.player_sprite = arcade.Sprite(scale=SPRITE_SCALING)
+        self.player_sprite.textures = [self.mouse_texture_left, self.mouse_texture_right]
+        self.player_sprite.texture = self.mouse_texture_right
+        self.player_list.append(self.player_sprite)
+        
+        # Place player at spawn point
+        self.player_sprite.center_x = SPRITE_SIZE + SPRITE_SIZE / 2
+        self.player_sprite.center_y = SPRITE_SIZE + SPRITE_SIZE / 2
+    
+    # Place coins randomly in walkable maze areas
+    def place_coins(self, maze, maze_size):
+        player_pos = (1, 1)
+        exit_pos = (maze_size - 2, maze_size - 2)
+        
+        for row in range(1, maze_size - 1):
+            for column in range(1, maze_size - 1):
+                # Check if tile is empty, not player/exit position, and random chance
+                if (maze[row][column] == TILE_EMPTY and 
+                    (row, column) != player_pos and 
+                    (row, column) != exit_pos and 
+                    random.random() < 0.08):  # 8% chance to place a coin
+                    coin = arcade.Sprite("images/items/cheese.png", scale=SPRITE_SCALING)
+                    coin.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
+                    coin.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
+                    self.coin_list.append(coin)
 
     # Restart the current maze without regenerating it
     # deduct_score: If True, deduct collected coins from grand total (for mid-game restart).
@@ -138,22 +258,14 @@ class GameView(arcade.View):
         self.down_pressed = False
         
         # Clear pathfinder visualization
-        if hasattr(self, 'pathfinder_active'):
-            if self.pathfinder_active:
-                black_tile = self.path_list[0] if len(self.path_list) > 0 else None
-                self.path_list = arcade.SpriteList()
-                if black_tile:
-                    self.path_list.append(black_tile)
-                self.pathfinder_active = False
-                self.pathfinder_timer = 0.0
+        self.clear_pathfinder()
         
         # Reset camera to player
         self.camera_sprites.position = (self.player_sprite.center_x, self.player_sprite.center_y)
 
     # Set up the game and initialize the variables
     def setup(self):
-
-        # Sprite lists
+        # Initialize sprite lists
         self.player_list = arcade.SpriteList()
         self.wall_list = arcade.SpriteList()
         self.floor_list = arcade.SpriteList()
@@ -162,168 +274,55 @@ class GameView(arcade.View):
         self.exit_list = arcade.SpriteList() 
 
         self.score = 0
+        self.camera_sprites.zoom = CAMERA_ZOOM
 
-        # Set camera zoom
-        self.camera_sprites.zoom = 2.0
+        # Get current configuration
+        current_maze_size = self.get_current_maze_size()
+        mouse_color = self.get_current_mouse_color()
 
-        # Determine maze size based on game mode
-        if self.game_mode == GameMode.STORY_MODE:
-            # Use the maze size from the story sequence
-            current_maze_size = STORY_MODE_MAZE_SEQUENCE[self.story_maze_index]
-            # Use the locked mouse color
-            mouse_color = self.story_mouse_color
-        else:
-            # Free play: use global settings
-            current_maze_size = MAZE_SIZE_SETTING
-            mouse_color = MOUSE_COLOR_SETTING
-
-        # Load textures for left and right facing mouse based on setting
-        mouse_filename = f"images/sprites/{mouse_color}_mouse.png"
-        self.mouse_texture_right = arcade.load_texture(mouse_filename)
-        self.mouse_texture_left = self.mouse_texture_right.flip_left_right()
-
-        # Sound effects
+        # Load sound effects
         self.coin_sound = arcade.Sound("sounds/collect.wav")
         self.pathfinder_sound = arcade.Sound("sounds/pathfinder.wav")
         self.exit_sound = arcade.Sound("sounds/exit.wav")
 
-        # Pathfinder power variables
-        self.pathfinder_uses_remaining = PATHFINDER_MAX_USES  # Uses available
-        self.pathfinder_max_uses = PATHFINDER_MAX_USES  # Maximum uses per maze
-        self.pathfinder_active = False  # Is path currently shown?
-        self.pathfinder_timer = 0.0  # Timer for auto-hide
-        self.pathfinder_duration = PATHFINDER_DURATION  # How long path stays visible (seconds)
-        self.pathfinder_max_tiles = PATHFINDER_MAX_TILES  # Maximum path tiles to show
+        # Initialize pathfinder variables
+        self.pathfinder_uses_remaining = PATHFINDER_MAX_USES
+        self.pathfinder_max_uses = PATHFINDER_MAX_USES
+        self.pathfinder_active = False
+        self.pathfinder_timer = 0.0
+        self.pathfinder_duration = PATHFINDER_DURATION
+        self.pathfinder_max_tiles = PATHFINDER_MAX_TILES
         
-        # Create the maze using the current size setting
-        # Maze must have an ODD number of rows and columns
-        # Walls go on EVEN rows/columns.
-        # Openings go on ODD rows/columns
+        # Generate maze
         maze = make_maze(current_maze_size, current_maze_size)
-        self.maze = maze  # Store maze for pathfinding
-
-        # Create sprites based on 2D grid
-        if not MERGE_SPRITES:
-            # This is the simple-to-understand method. Each grid location
-            # is a sprite
-            for row in range(current_maze_size):
-                for column in range(current_maze_size):
-                    if maze[row][column] == TILE_CRATE:
-                        wall = arcade.Sprite(
-                            "images/tiles/blankTile.png",
-                            scale=SPRITE_SCALING,
-                        )
-                        wall.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
-                        wall.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
-                        self.wall_list.append(wall)
-        else:
-            # This uses new Arcade 1.3.1 features, that allow me to create a
-            # larger sprite with a repeating texture. So if there are multiple
-            # cells in a row with a wall, we merge them into one sprite, with a
-            # repeating texture for each cell. This reduces our sprite count
-            for row in range(current_maze_size):
-                column = 0
-                while column < len(maze):
-                    while column < len(maze) and maze[row][column] == TILE_EMPTY:
-                        column += 1
-                    start_column = column
-                    while column < len(maze) and maze[row][column] == TILE_CRATE:
-                        column += 1
-                    end_column = column - 1
-
-                    column_count = end_column - start_column + 1
-                    column_mid = (start_column + end_column) / 2
-                    
-                    # Set wall sprite
-                    wall = arcade.Sprite(
-                        "images/tiles/blankTile.png",
-                        scale=SPRITE_SCALING,
-                    )
-                    wall.center_x = column_mid * SPRITE_SIZE + SPRITE_SIZE / 2
-                    wall.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
-                    wall.width = SPRITE_SIZE * column_count
-
-                    # SET MAZE WALL COLOR
-                    wall.color = arcade.color.DODGER_BLUE
-
-                    self.wall_list.append(wall)
-
-        # Create floor tiles for all empty (walkable) spaces in the maze
-        for row in range(current_maze_size):
-            for column in range(current_maze_size):
-                if maze[row][column] == TILE_EMPTY:
-                    floor = arcade.Sprite(
-                        "images/tiles/blankTile.png",
-                        scale=SPRITE_SCALING,
-                    )
-                    floor.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
-                    floor.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
-                    
-                    # SET MAZE FLOOR COLOR
-                    floor.color = arcade.color.DEEP_SKY_BLUE
-                    
-                    self.floor_list.append(floor)
-
-        # Set up the player with left-facing texture
-        self.player_sprite = arcade.Sprite(
-            scale=SPRITE_SCALING)
+        self.maze = maze
         
-        # Set up both textures - left at index 0, right at index 1
-        self.player_sprite.textures = [self.mouse_texture_left, self.mouse_texture_right]
-        self.player_sprite.texture = self.mouse_texture_right
-        self.player_list.append(self.player_sprite)
-
-        # Place the player one tile to the right of the left wall (inside the maze)
-        self.player_sprite.center_x = SPRITE_SIZE + SPRITE_SIZE / 2
-        self.player_sprite.center_y = SPRITE_SIZE + SPRITE_SIZE / 2
-
-        # Create black tile at exit position (will be drawn under the exit sign)
-        black_tile = arcade.Sprite(
-            "images/tiles/blankTile.png",
-            scale=SPRITE_SCALING,
-        )
-        black_tile.center_x = (current_maze_size - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
-        black_tile.center_y = (current_maze_size - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
-        black_tile.color = arcade.color.BLACK
-        self.path_list.append(black_tile)
-
-        # Create exit sprite (will be drawn on top of black tile)
-        exit_sprite = arcade.Sprite(
-            "images/tiles/exitSign.png",
-            scale=SPRITE_SCALING,
-        )
+        # Create maze sprites
+        self.create_maze_walls(maze, current_maze_size)
+        self.create_maze_floor(maze, current_maze_size)
+        
+        # Setup player
+        self.setup_player(mouse_color)
+        
+        # Create exit marker and sign
+        self.create_exit_black_tile()
+        exit_sprite = arcade.Sprite("images/tiles/exitSign.png", scale=SPRITE_SCALING)
         exit_sprite.center_x = (current_maze_size - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
         exit_sprite.center_y = (current_maze_size - 2) * SPRITE_SIZE + SPRITE_SIZE / 2
         self.exit_list.append(exit_sprite)
-
+        
+        # Setup physics
         self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.wall_list)
-
-        # Set the background color
+        
+        # Set background color
         self.background_color = arcade.color.TEAL
-
-        # Randomly place coins in the maze
-        # Only place on verified empty tiles, and avoid player/exit positions
-        player_pos = (1, 1)
-        exit_pos = (current_maze_size - 2, current_maze_size - 2)
         
-        for row in range(1, current_maze_size - 1):
-            for column in range(1, current_maze_size - 1):
-                # Check if tile is empty, not player/exit position, and random chance
-                if (maze[row][column] == TILE_EMPTY and 
-                    (row, column) != player_pos and 
-                    (row, column) != exit_pos and 
-                    random.random() < 0.08):  # 8% chance to place a coin
-                    coin = arcade.Sprite(
-                        "images/items/cheese.png",
-                        scale=SPRITE_SCALING,
-                    )
-                    coin.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
-                    coin.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
-                    self.coin_list.append(coin)
+        # Place coins
+        self.place_coins(maze, current_maze_size)
         
-        # Start gameplay music if not already playing
+        # Start music if not playing
         if not self.music_player:
-            self.music_player = self.gameplay_music.play(volume=0.3 * VOLUME_SETTING)
+            self.music_player = self.gameplay_music.play(volume=MUSIC_VOLUME_MULTIPLIER * constants.VOLUME_SETTING)
             self.music_player.push_handlers(on_eos=self.loop_gameplay_music)
 
     # Render the screen
@@ -360,10 +359,7 @@ class GameView(arcade.View):
         arcade.draw_text(output, 20, WINDOW_HEIGHT - 80, arcade.color.WHITE, 16)
         
         # Show maze size for current maze
-        if self.game_mode == GameMode.STORY_MODE:
-            current_size = STORY_MODE_MAZE_SEQUENCE[self.story_maze_index]
-        else:
-            current_size = MAZE_SIZE_SETTING
+        current_size = self.get_current_maze_size()
         size_name = "Small" if current_size == 21 else "Medium" if current_size == 31 else "Large"
         output = f"Maze Size: {size_name}"
         arcade.draw_text(output, 20, WINDOW_HEIGHT - 100, arcade.color.WHITE, 16)
@@ -389,8 +385,8 @@ class GameView(arcade.View):
         # Normalize diagonal movement so speed is consistent in all directions
         if self.player_sprite.change_x != 0 and self.player_sprite.change_y != 0:
             # Moving diagonally, so normalize to maintain constant speed
-            self.player_sprite.change_x *= 0.7071  # 1/sqrt(2)
-            self.player_sprite.change_y *= 0.7071
+            self.player_sprite.change_x *= DIAGONAL_MOVEMENT_FACTOR
+            self.player_sprite.change_y *= DIAGONAL_MOVEMENT_FACTOR
         
         # Update sprite direction based on horizontal movement
         if self.player_sprite.change_x < 0:
@@ -410,11 +406,11 @@ class GameView(arcade.View):
         elif key == arcade.key.SPACE:
             # Check if player has uses remaining
             if self.pathfinder_uses_remaining > 0:
-                # Clear any existing path first (keep black tile at exit)
-                black_tile = self.path_list[0] if len(self.path_list) > 0 else None
-                self.path_list = arcade.SpriteList()
-                if black_tile:
-                    self.path_list.append(black_tile)
+                # Clear any existing path first
+                self.clear_pathfinder()
+                # Restore black tile after clearing
+                if len(self.path_list) == 0:
+                    self.create_exit_black_tile()
                 
                 # Show pathfinder path
                 self.pathfinder(self.maze)
@@ -423,7 +419,7 @@ class GameView(arcade.View):
                 self.pathfinder_uses_remaining -= 1
                 self.pathfinder_active = True
                 self.pathfinder_timer = 0.0
-                self.pathfinder_sound.play(volume=0.3 * VOLUME_SETTING, pan=0.0)
+                self.pathfinder_sound.play(volume=SOUND_VOLUME_MULTIPLIER * constants.VOLUME_SETTING, pan=0.0)
 
 
         elif key in (arcade.key.UP, arcade.key.W):
@@ -467,7 +463,7 @@ class GameView(arcade.View):
                 coin.visible = False
                 self.score += 1
                 self.grand_total_score += 1
-                self.coin_sound.play(volume=0.3 * VOLUME_SETTING)
+                self.coin_sound.play(volume=SOUND_VOLUME_MULTIPLIER * constants.VOLUME_SETTING)
 
         # Check if player reached the exit (player must be fully on the exit tile)
         exit_sprite = self.exit_list[0]
@@ -484,7 +480,7 @@ class GameView(arcade.View):
             self.player_sprite.center_y > exit_tile_bottom and 
             self.player_sprite.center_y < exit_tile_top):
 
-            self.exit_sound.play(volume=0.3 * VOLUME_SETTING)
+            self.exit_sound.play(volume=SOUND_VOLUME_MULTIPLIER * constants.VOLUME_SETTING)
 
             if self.game_mode == GameMode.STORY_MODE:
                 # Track total time across all mazes
@@ -513,12 +509,10 @@ class GameView(arcade.View):
             self.pathfinder_timer += delta_time
             if self.pathfinder_timer >= self.pathfinder_duration:
                 # Time's up - clear the path
-                black_tile = self.path_list[0] if len(self.path_list) > 0 else None
-                self.path_list = arcade.SpriteList()
-                if black_tile:
-                    self.path_list.append(black_tile)
-                self.pathfinder_active = False
-                self.pathfinder_timer = 0.0
+                self.clear_pathfinder()
+                # Restore black tile
+                if len(self.path_list) == 0:
+                    self.create_exit_black_tile()
 
         # Scroll the screen to the player
         self.scroll_to_player()
@@ -541,10 +535,7 @@ class GameView(arcade.View):
         player_grid_y = int(self.player_sprite.center_y / SPRITE_SIZE)
 
         # Determine current maze size
-        if self.game_mode == GameMode.STORY_MODE:
-            current_maze_size = STORY_MODE_MAZE_SEQUENCE[self.story_maze_index]
-        else:
-            current_maze_size = MAZE_SIZE_SETTING
+        current_maze_size = self.get_current_maze_size()
         
         # A* expects (row, column) which is (y, x)
         start = (player_grid_y, player_grid_x)
@@ -558,15 +549,9 @@ class GameView(arcade.View):
             limited_path = path[-self.pathfinder_max_tiles:] if len(path) > self.pathfinder_max_tiles else path
             
             for (row, column) in limited_path:
-                path_sprite = arcade.Sprite(
-                    "images/tiles/blankTile.png",
-                    scale=SPRITE_SCALING,
-                )
+                path_sprite = arcade.Sprite("images/tiles/blankTile.png", scale=SPRITE_SCALING)
                 # Convert grid coordinates back to pixel coordinates
                 path_sprite.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
                 path_sprite.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
-                
-                # SET PATH COLOR
                 path_sprite.color = arcade.color.RED
-                
                 self.path_list.append(path_sprite)

@@ -2,23 +2,21 @@
 
 import arcade
 import arcade.gui
+import constants
 from constants import (
-    SPRITE_SCALING,
-    SPRITE_SIZE,
-    WINDOW_HEIGHT,
     CONGRATULATIONS_DELAY,
-    STORY_MODE_TOTAL_MAZES,
+    UI_BUTTON_WIDTH_LARGE,
+    UI_BUTTON_WIDTH_SMALL,
+    UI_BUTTON_WIDTH_TINY,
+    UI_BUTTON_HEIGHT_LARGE,
+    UI_BUTTON_HEIGHT_MEDIUM,
+    UI_BUTTON_HEIGHT_SMALL,
+    UI_SPACING_LARGE,
+    UI_SPACING_MEDIUM,
+    UI_SPACING_SMALL,
+    UI_SPACING_TINY,
 )
 from view_manager import GameMode
-
-# Global maze size setting (can be changed in settings)
-MAZE_SIZE_SETTING = 21  # Default to small (options: 21, 31, 51)
-
-# Global mouse color setting (can be changed in settings)
-MOUSE_COLOR_SETTING = "white"  # Default to white (options: "white", "grey", "brown")
-
-# Global volume setting (can be changed in settings)
-VOLUME_SETTING = 0.5  # Default to 50% (range: 0.0 to 1.0)
 
 # Main Menu View with GUI widgets
 class MainMenuView(arcade.View):
@@ -32,7 +30,7 @@ class MainMenuView(arcade.View):
         root = arcade.gui.UIAnchorLayout()
         
         # Create vertical box for menu items
-        menu_box = arcade.gui.UIBoxLayout(vertical=True, space_between=20)
+        menu_box = arcade.gui.UIBoxLayout(vertical=True, space_between=UI_SPACING_MEDIUM)
         
         # Add title
         title = arcade.gui.UILabel(
@@ -44,13 +42,13 @@ class MainMenuView(arcade.View):
         menu_box.add(title)
         
         # Add some space after title
-        menu_box.add(arcade.gui.UISpace(height=30))
+        menu_box.add(arcade.gui.UISpace(height=UI_SPACING_LARGE))
 
         # Create Story Mode button
         story_mode_button = arcade.gui.UIFlatButton(
             text="Story Mode",
-            width=250,
-            height=50,
+            width=UI_BUTTON_WIDTH_LARGE,
+            height=UI_BUTTON_HEIGHT_LARGE,
             style=arcade.gui.UIFlatButton.STYLE_BLUE
         )
         menu_box.add(story_mode_button)
@@ -63,8 +61,8 @@ class MainMenuView(arcade.View):
         # Create Free Play button
         free_play_button = arcade.gui.UIFlatButton(
             text="Free Play",
-            width=250,
-            height=50,
+            width=UI_BUTTON_WIDTH_LARGE,
+            height=UI_BUTTON_HEIGHT_LARGE,
             style=arcade.gui.UIFlatButton.STYLE_BLUE
         )
         menu_box.add(free_play_button)
@@ -76,8 +74,8 @@ class MainMenuView(arcade.View):
         # Create settings button
         settings_button = arcade.gui.UIFlatButton(
             text="Settings",
-            width=250,
-            height=50,
+            width=UI_BUTTON_WIDTH_LARGE,
+            height=UI_BUTTON_HEIGHT_LARGE,
             style=arcade.gui.UIFlatButton.STYLE_BLUE
         )
         menu_box.add(settings_button)
@@ -89,8 +87,8 @@ class MainMenuView(arcade.View):
         # Create quit button
         quit_button = arcade.gui.UIFlatButton(
             text="Quit",
-            width=250,
-            height=50,
+            width=UI_BUTTON_WIDTH_LARGE,
+            height=UI_BUTTON_HEIGHT_LARGE,
             style=arcade.gui.UIFlatButton.STYLE_RED
         )
         menu_box.add(quit_button)
@@ -100,7 +98,7 @@ class MainMenuView(arcade.View):
             arcade.close_window()
         
         # Add instructions at bottom
-        menu_box.add(arcade.gui.UISpace(height=40))
+        menu_box.add(arcade.gui.UISpace(height=UI_SPACING_LARGE))
         instructions = arcade.gui.UILabel(
             text="| WASD or Arrow Keys to Move | R to Restart | ESC or ENTER to Pause | SPACE for Pathfinder |",
             font_size=14,
@@ -138,7 +136,7 @@ class MouseSelectionView(arcade.View):
         root = arcade.gui.UIAnchorLayout()
         
         # Create vertical box for menu items
-        menu_box = arcade.gui.UIBoxLayout(vertical=True, space_between=20)
+        menu_box = arcade.gui.UIBoxLayout(vertical=True, space_between=UI_SPACING_MEDIUM)
         
         # Add title
         title = arcade.gui.UILabel(
@@ -157,16 +155,16 @@ class MouseSelectionView(arcade.View):
         )
         menu_box.add(subtitle)
         
-        menu_box.add(arcade.gui.UISpace(height=20))
+        menu_box.add(arcade.gui.UISpace(height=UI_SPACING_MEDIUM))
         
         # Create horizontal box for mouse color buttons
-        mouse_button_box = arcade.gui.UIBoxLayout(vertical=False, space_between=20)
+        mouse_button_box = arcade.gui.UIBoxLayout(vertical=False, space_between=UI_SPACING_MEDIUM)
         
         # White mouse button
         white_button = arcade.gui.UIFlatButton(
             text="White Mouse",
-            width=150,
-            height=50,
+            width=UI_BUTTON_WIDTH_SMALL,
+            height=UI_BUTTON_HEIGHT_LARGE,
             style=arcade.gui.UIFlatButton.STYLE_BLUE
         )
         mouse_button_box.add(white_button)
@@ -178,8 +176,8 @@ class MouseSelectionView(arcade.View):
         # Grey mouse button
         grey_button = arcade.gui.UIFlatButton(
             text="Grey Mouse",
-            width=150,
-            height=50,
+            width=UI_BUTTON_WIDTH_SMALL,
+            height=UI_BUTTON_HEIGHT_LARGE,
             style=arcade.gui.UIFlatButton.STYLE_BLUE
         )
         mouse_button_box.add(grey_button)
@@ -191,8 +189,8 @@ class MouseSelectionView(arcade.View):
         # Brown mouse button
         brown_button = arcade.gui.UIFlatButton(
             text="Brown Mouse",
-            width=150,
-            height=50,
+            width=UI_BUTTON_WIDTH_SMALL,
+            height=UI_BUTTON_HEIGHT_LARGE,
             style=arcade.gui.UIFlatButton.STYLE_BLUE
         )
         mouse_button_box.add(brown_button)
@@ -203,13 +201,13 @@ class MouseSelectionView(arcade.View):
         
         menu_box.add(mouse_button_box)
         
-        menu_box.add(arcade.gui.UISpace(height=30))
+        menu_box.add(arcade.gui.UISpace(height=UI_SPACING_LARGE))
         
         # Back button
         back_button = arcade.gui.UIFlatButton(
             text="Back to Main Menu",
-            width=250,
-            height=45,
+            width=UI_BUTTON_WIDTH_LARGE,
+            height=UI_BUTTON_HEIGHT_MEDIUM,
             style=arcade.gui.UIFlatButton.STYLE_BLUE
         )
         menu_box.add(back_button)
@@ -276,53 +274,50 @@ class SettingsView(arcade.View):
             menu_box.add(arcade.gui.UISpace(height=5))
             
             # Create horizontal box for size buttons to save vertical space
-            size_button_box = arcade.gui.UIBoxLayout(vertical=False, space_between=10)
+            size_button_box = arcade.gui.UIBoxLayout(vertical=False, space_between=UI_SPACING_TINY)
             
             small_button = arcade.gui.UIFlatButton(
                 text="Small",
-                width=75,
-                height=40,
-                style=arcade.gui.UIFlatButton.STYLE_BLUE if MAZE_SIZE_SETTING == 21 else None
+                width=UI_BUTTON_WIDTH_TINY,
+                height=UI_BUTTON_HEIGHT_SMALL,
+                style=arcade.gui.UIFlatButton.STYLE_BLUE if constants.MAZE_SIZE_SETTING == 21 else None
             )
             size_button_box.add(small_button)
             
             @small_button.event("on_click")
             def on_small_click(_):
-                global MAZE_SIZE_SETTING
-                MAZE_SIZE_SETTING = 21
+                constants.MAZE_SIZE_SETTING = 21
                 self.view_manager.show_settings(previous_view=self.previous_view, game_mode=self.game_mode)
             
             medium_button = arcade.gui.UIFlatButton(
                 text="Medium",
-                width=75,
-                height=40,
-                style=arcade.gui.UIFlatButton.STYLE_BLUE if MAZE_SIZE_SETTING == 31 else None
+                width=UI_BUTTON_WIDTH_TINY,
+                height=UI_BUTTON_HEIGHT_SMALL,
+                style=arcade.gui.UIFlatButton.STYLE_BLUE if constants.MAZE_SIZE_SETTING == 31 else None
             )
             size_button_box.add(medium_button)
             
             @medium_button.event("on_click")
             def on_medium_click(_):
-                global MAZE_SIZE_SETTING
-                MAZE_SIZE_SETTING = 31
+                constants.MAZE_SIZE_SETTING = 31
                 self.view_manager.show_settings(previous_view=self.previous_view, game_mode=self.game_mode)
             
             large_button = arcade.gui.UIFlatButton(
                 text="Large",
-                width=75,
-                height=40,
-                style=arcade.gui.UIFlatButton.STYLE_BLUE if MAZE_SIZE_SETTING == 51 else None
+                width=UI_BUTTON_WIDTH_TINY,
+                height=UI_BUTTON_HEIGHT_SMALL,
+                style=arcade.gui.UIFlatButton.STYLE_BLUE if constants.MAZE_SIZE_SETTING == 51 else None
             )
             size_button_box.add(large_button)
             
             @large_button.event("on_click")
             def on_large_click(_):
-                global MAZE_SIZE_SETTING
-                MAZE_SIZE_SETTING = 51
+                constants.MAZE_SIZE_SETTING = 51
                 self.view_manager.show_settings(previous_view=self.previous_view, game_mode=self.game_mode)
             
             menu_box.add(size_button_box)
             
-            menu_box.add(arcade.gui.UISpace(height=15))
+            menu_box.add(arcade.gui.UISpace(height=UI_SPACING_SMALL))
 
             # Mouse color section
             mouse_label = arcade.gui.UILabel(
@@ -336,55 +331,52 @@ class SettingsView(arcade.View):
             menu_box.add(arcade.gui.UISpace(height=5))
             
             # Create horizontal box for mouse color buttons
-            mouse_button_box = arcade.gui.UIBoxLayout(vertical=False, space_between=10)
+            mouse_button_box = arcade.gui.UIBoxLayout(vertical=False, space_between=UI_SPACING_TINY)
             
             white_button = arcade.gui.UIFlatButton(
                 text="White",
-                width=75,
-                height=40,
-                style=arcade.gui.UIFlatButton.STYLE_BLUE if MOUSE_COLOR_SETTING == "white" else None
+                width=UI_BUTTON_WIDTH_TINY,
+                height=UI_BUTTON_HEIGHT_SMALL,
+                style=arcade.gui.UIFlatButton.STYLE_BLUE if constants.MOUSE_COLOR_SETTING == "white" else None
             )
             mouse_button_box.add(white_button)
             
             @white_button.event("on_click")
             def on_white_click(_):
-                global MOUSE_COLOR_SETTING
-                MOUSE_COLOR_SETTING = "white"
+                constants.MOUSE_COLOR_SETTING = "white"
                 self.view_manager.show_settings(previous_view=self.previous_view, game_mode=self.game_mode)
             
             grey_button = arcade.gui.UIFlatButton(
                 text="Grey",
-                width=75,
-                height=40,
-                style=arcade.gui.UIFlatButton.STYLE_BLUE if MOUSE_COLOR_SETTING == "grey" else None
+                width=UI_BUTTON_WIDTH_TINY,
+                height=UI_BUTTON_HEIGHT_SMALL,
+                style=arcade.gui.UIFlatButton.STYLE_BLUE if constants.MOUSE_COLOR_SETTING == "grey" else None
             )
             mouse_button_box.add(grey_button)
             
             @grey_button.event("on_click")
             def on_grey_click(_):
-                global MOUSE_COLOR_SETTING
-                MOUSE_COLOR_SETTING = "grey"
+                constants.MOUSE_COLOR_SETTING = "grey"
                 self.view_manager.show_settings(previous_view=self.previous_view, game_mode=self.game_mode)
             
             brown_button = arcade.gui.UIFlatButton(
                 text="Brown",
-                width=75,
-                height=40,
-                style=arcade.gui.UIFlatButton.STYLE_BLUE if MOUSE_COLOR_SETTING == "brown" else None
+                width=UI_BUTTON_WIDTH_TINY,
+                height=UI_BUTTON_HEIGHT_SMALL,
+                style=arcade.gui.UIFlatButton.STYLE_BLUE if constants.MOUSE_COLOR_SETTING == "brown" else None
             )
             mouse_button_box.add(brown_button)
             
             @brown_button.event("on_click")
             def on_brown_click(_):
-                global MOUSE_COLOR_SETTING
-                MOUSE_COLOR_SETTING = "brown"
+                constants.MOUSE_COLOR_SETTING = "brown"
                 self.view_manager.show_settings(previous_view=self.previous_view, game_mode=self.game_mode)            
             menu_box.add(mouse_button_box)
             
-            menu_box.add(arcade.gui.UISpace(height=15))
+            menu_box.add(arcade.gui.UISpace(height=UI_SPACING_SMALL))
         
         # Volume section - combine label and percentage
-        volume_header_box = arcade.gui.UIBoxLayout(vertical=False, space_between=10)
+        volume_header_box = arcade.gui.UIBoxLayout(vertical=False, space_between=UI_SPACING_TINY)
         
         volume_label = arcade.gui.UILabel(
             text="Volume:",
@@ -395,7 +387,7 @@ class SettingsView(arcade.View):
         volume_header_box.add(volume_label)
         
         # Volume percentage display
-        volume_percent = int(VOLUME_SETTING * 100)
+        volume_percent = int(constants.VOLUME_SETTING * 100)
         volume_display = arcade.gui.UILabel(
             text=f"{volume_percent}%",
             font_size=20,
@@ -410,29 +402,28 @@ class SettingsView(arcade.View):
         
         # Volume slider
         volume_slider = arcade.gui.UISlider(
-            value=VOLUME_SETTING * 100,  # Convert to 0-100 range
+            value=constants.VOLUME_SETTING * 100,  # Convert to 0-100 range
             min_value=0,
             max_value=100,
-            width=250,
+            width=UI_BUTTON_WIDTH_LARGE,
             height=20
         )
         menu_box.add(volume_slider)
         
         @volume_slider.event("on_change")
         def on_slider_change(event):
-            global VOLUME_SETTING
-            VOLUME_SETTING = event.new_value / 100.0  # Convert back to 0.0-1.0
+            constants.VOLUME_SETTING = event.new_value / 100.0  # Convert back to 0.0-1.0
             # Update the volume display label
             volume_display.text = f"{int(event.new_value)}%"
         
-        menu_box.add(arcade.gui.UISpace(height=15))
+        menu_box.add(arcade.gui.UISpace(height=UI_SPACING_SMALL))
         
         # Back button - returns to previous view or main menu
         back_text = "Back" if self.previous_view else "Back to Main Menu"
         back_button = arcade.gui.UIFlatButton(
             text=back_text,
-            width=250,
-            height=45,
+            width=UI_BUTTON_WIDTH_LARGE,
+            height=UI_BUTTON_HEIGHT_MEDIUM,
             style=arcade.gui.UIFlatButton.STYLE_BLUE
         )
         menu_box.add(back_button)
@@ -473,15 +464,6 @@ class InGameMenuView(arcade.View):
         self.view_manager = view_manager
         self.ui = arcade.gui.UIManager()
         
-        # Clear pathfinder when entering pause menu
-        if hasattr(game_view, 'pathfinder_active') and game_view.pathfinder_active:
-            black_tile = game_view.path_list[0] if len(game_view.path_list) > 0 else None
-            game_view.path_list = arcade.SpriteList()
-            if black_tile:
-                game_view.path_list.append(black_tile)
-            game_view.pathfinder_active = False
-            game_view.pathfinder_timer = 0.0
-        
         # Create main layout
         root = arcade.gui.UIAnchorLayout()
         
@@ -502,8 +484,8 @@ class InGameMenuView(arcade.View):
         # Create resume button
         resume_button = arcade.gui.UIFlatButton(
             text="Resume",
-            width=250,
-            height=50,
+            width=UI_BUTTON_WIDTH_LARGE,
+            height=UI_BUTTON_HEIGHT_LARGE,
             style=arcade.gui.UIFlatButton.STYLE_BLUE
         )
         menu_box.add(resume_button)
@@ -515,8 +497,8 @@ class InGameMenuView(arcade.View):
         # Create settings button
         settings_button = arcade.gui.UIFlatButton(
             text="Settings",
-            width=250,
-            height=50,
+            width=UI_BUTTON_WIDTH_LARGE,
+            height=UI_BUTTON_HEIGHT_LARGE,
             style=arcade.gui.UIFlatButton.STYLE_BLUE
         )
         menu_box.add(settings_button)
@@ -530,8 +512,8 @@ class InGameMenuView(arcade.View):
         # Create main menu button
         main_menu_button = arcade.gui.UIFlatButton(
             text="Main Menu",
-            width=250,
-            height=50,
+            width=UI_BUTTON_WIDTH_LARGE,
+            height=UI_BUTTON_HEIGHT_LARGE,
             style=arcade.gui.UIFlatButton.STYLE_BLUE
         )
         menu_box.add(main_menu_button)
@@ -543,8 +525,8 @@ class InGameMenuView(arcade.View):
         # Create quit button
         quit_button = arcade.gui.UIFlatButton(
             text="Quit",
-            width=250,
-            height=50,
+            width=UI_BUTTON_WIDTH_LARGE,
+            height=UI_BUTTON_HEIGHT_LARGE,
             style=arcade.gui.UIFlatButton.STYLE_RED
         )
         menu_box.add(quit_button)
@@ -554,7 +536,7 @@ class InGameMenuView(arcade.View):
             arcade.close_window()
         
         # Add instructions at bottom
-        menu_box.add(arcade.gui.UISpace(height=40))
+        menu_box.add(arcade.gui.UISpace(height=UI_SPACING_LARGE))
         instructions = arcade.gui.UILabel(
             text="| WASD or Arrow Keys to Move | R to Restart | ESC or ENTER to Pause | SPACE for Pathfinder |",
             font_size=14,
@@ -568,6 +550,12 @@ class InGameMenuView(arcade.View):
 
     def on_show_view(self):
         """ This is run once when we switch to this view """
+        # Clear pathfinder when showing pause menu
+        if self.game_view.pathfinder_active:
+            self.game_view.clear_pathfinder()
+            # Restore black tile
+            if len(self.game_view.path_list) == 0:
+                self.game_view._create_exit_black_tile()
         self.ui.enable()
 
     def on_hide_view(self):
@@ -677,10 +665,10 @@ class CongratulationsView(arcade.View):
         )
         content_box.add(mazes_label)
         
-        content_box.add(arcade.gui.UISpace(height=30))
+        content_box.add(arcade.gui.UISpace(height=UI_SPACING_LARGE))
         
         # Create button row for actions
-        button_row = arcade.gui.UIBoxLayout(vertical=False, space_between=15)
+        button_row = arcade.gui.UIBoxLayout(vertical=False, space_between=UI_SPACING_SMALL)
         
         # Main menu button (first)
         menu_button = arcade.gui.UIFlatButton(
@@ -795,7 +783,7 @@ class StoryVictoryView(arcade.View):
         root = arcade.gui.UIAnchorLayout()
         
         # Create vertical box for content
-        content_box = arcade.gui.UIBoxLayout(vertical=True, space_between=20)
+        content_box = arcade.gui.UIBoxLayout(vertical=True, space_between=UI_SPACING_MEDIUM)
         
         # Add victory title
         title = arcade.gui.UILabel(
@@ -814,7 +802,7 @@ class StoryVictoryView(arcade.View):
         )
         content_box.add(subtitle)
         
-        content_box.add(arcade.gui.UISpace(height=30))
+        content_box.add(arcade.gui.UISpace(height=UI_SPACING_LARGE))
         
         # Add statistics
         total_score_text = f"Total Cheese Collected: {self.game_view.grand_total_score}"
@@ -835,7 +823,7 @@ class StoryVictoryView(arcade.View):
             )
             content_box.add(time_label)
         
-        content_box.add(arcade.gui.UISpace(height=40))
+        content_box.add(arcade.gui.UISpace(height=UI_SPACING_LARGE))
         
         # Main menu button
         menu_button = arcade.gui.UIFlatButton(
