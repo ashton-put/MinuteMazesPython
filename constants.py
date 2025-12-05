@@ -11,7 +11,7 @@ WINDOW_HEIGHT = 700
 WINDOW_TITLE = "MINUTE MAZES"
 
 # Player configuration
-MOVEMENT_SPEED = 6
+MOVEMENT_SPEED = 5
 DIAGONAL_MOVEMENT_FACTOR = 0.7071  # 1/sqrt(2) for normalized diagonal movement
 
 # Camera configuration
