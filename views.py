@@ -84,8 +84,7 @@ class MainMenuView(arcade.View):
         
         @settings_button.event("on_click")
         def on_settings_click(_):
-            settings_view = SettingsView(previous_view=None)
-            self.window.show_view(settings_view)
+            self.view_manager.show_settings(previous_view=None)
         
         # Create quit button
         quit_button = arcade.gui.UIFlatButton(
@@ -291,7 +290,6 @@ class SettingsView(arcade.View):
             def on_small_click(_):
                 global MAZE_SIZE_SETTING
                 MAZE_SIZE_SETTING = 21
-                from view_manager import GameMode
                 self.view_manager.show_settings(previous_view=self.previous_view, game_mode=self.game_mode)
             
             medium_button = arcade.gui.UIFlatButton(
@@ -306,7 +304,6 @@ class SettingsView(arcade.View):
             def on_medium_click(_):
                 global MAZE_SIZE_SETTING
                 MAZE_SIZE_SETTING = 31
-                from view_manager import GameMode
                 self.view_manager.show_settings(previous_view=self.previous_view, game_mode=self.game_mode)
             
             large_button = arcade.gui.UIFlatButton(
@@ -321,7 +318,6 @@ class SettingsView(arcade.View):
             def on_large_click(_):
                 global MAZE_SIZE_SETTING
                 MAZE_SIZE_SETTING = 51
-                from view_manager import GameMode
                 self.view_manager.show_settings(previous_view=self.previous_view, game_mode=self.game_mode)
             
             menu_box.add(size_button_box)
