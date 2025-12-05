@@ -2,14 +2,14 @@
 
 import arcade
 from constants import WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE
-from classes import MainMenuView
+from view_manager import ViewManager
 
 def main():
     # Create a window class. This is what actually shows up on screen
     window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
 
-    main_menu_view = MainMenuView()
-    window.show_view(main_menu_view)
+    view_manager = ViewManager(window)
+    view_manager.show_main_menu()
 
     # Start the arcade game loop
     arcade.run()
