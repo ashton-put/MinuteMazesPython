@@ -210,8 +210,8 @@ class GameView(arcade.View):
         self.player_sprite.center_x = SPRITE_SIZE + SPRITE_SIZE / 2
         self.player_sprite.center_y = SPRITE_SIZE + SPRITE_SIZE / 2
     
-    # Place coins randomly in walkable maze areas
-    def place_coins(self, maze, maze_size):
+    # Place cheese randomly in walkable maze areas
+    def place_cheese(self, maze, maze_size):
         player_pos = (1, 1)
         exit_pos = (maze_size - 2, maze_size - 2)
         
@@ -318,7 +318,7 @@ class GameView(arcade.View):
         self.background_color = arcade.color.TEAL
         
         # Place coins
-        self.place_coins(maze, current_maze_size)
+        self.place_cheese(maze, current_maze_size)
         
         # Start music if not playing
         if not self.music_player:
